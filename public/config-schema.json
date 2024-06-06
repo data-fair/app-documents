@@ -1,0 +1,42 @@
+{
+  "type": "object",
+  "required": [
+    "datasets"
+  ],
+  "allOf": [
+    {
+      "title": "Source de données",
+      "properties": {
+        "datasets": {
+          "type": "array",
+          "items": [
+            {
+              "title": "Jeu de données",
+              "description": "Ce jeu doit contenir au moins une colonne avec valeur numérique",
+              "type": "object",
+              "x-fromUrl": "api/v1/datasets?status=finalized&field-type=integer,number&q={q}&select=id,title&{context.datasetFilter},&rest=true",
+              "x-itemsProp": "results",
+              "x-itemTitle": "title",
+              "x-itemKey": "href",
+              "additionalProperties": false,
+              "properties": {
+                "href": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "finalizedAt": {
+                  "type": "string"
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

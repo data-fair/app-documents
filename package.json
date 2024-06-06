@@ -1,0 +1,40 @@
+{
+  "name": "app-document",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "DATAFAIR_OWNER_ID=5a5dc47163ebd4a6f438589b:test DATAFAIR_API_KEY=bzo1YTVkYzQ3MTYzZWJkNGE2ZjQzODU4OWI6dGVzdDpNbnU5MUlaOTd3MHY2Y3V1Smhhdnc APP_URL=http://localhost:3000/app/ df-dev-server",
+    "dev-src": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore"
+  },
+  "files": [
+    "dist"
+  ],
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead",
+    "not ie 11"
+  ],
+  "dependencies": {
+    "@data-fair/lib": "^0.30.0",
+    "@koumoul/v-iframe": "^2.4.0",
+    "@vueuse/core": "^10.7.2",
+    "ofetch": "^1.3.3",
+    "vue": "^3.4.15",
+    "vuetify": "^3.5.4"  
+  },
+  "devDependencies": {
+    "@data-fair/dev-server": "^1.12.0",
+    "@types/node": "^20.9.1",
+    "@vitejs/plugin-vue": "^5.0.3",
+    "eslint": "^8.49.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-vue": "^9.17.0",
+    "sass": "^1.71.0",
+    "vite": "^5.0.11",
+    "vite-plugin-vuetify": "^2.0.1"
+  }
+}
