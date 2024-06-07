@@ -1,5 +1,5 @@
 <script setup>
-import { getMetaData, getValueField } from './content.js'
+import { getMetaData, getValueField } from './request.js'
 import tableDataset from './tableDataset.vue'
 import createDoc from './createDoc.vue'
 

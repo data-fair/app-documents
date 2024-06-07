@@ -1,17 +1,17 @@
 <script setup>
 import { reactive, ref } from 'vue'
-import { postDocumentParam } from './content.js'
+import { postDocumentParam, postFolder } from './request.js'
 
 const application = /** @type {import('@data-fair/lib/shared/application.js').Application} */ (window.APPLICATION)
 const config = /** @type {import('../config/.type/types.js').Config} */ (application.configuration)
 const dataUrl = config.datasets?.[0].href
 const overlay = ref(false)
-const isFolder = ref(false)
 const payloadDocument = reactive({
   nom: '',
   description: '',
   version: '',
-  file: ''
+  file: '',
+  isfolder: false
 })
 </script>
 <template>
@@ -27,10 +27,11 @@ const payloadDocument = reactive({
       width="200%"
     >
       <v-checkbox
-        v-model="isFolder"
+        v-model="payloadDocument.isfolder"
         label="Dossier ?"
+        @click="payloadDocument.isfolder=true"
       />
-      <div v-if="!isFolder">
+      <div v-if="!payloadDocument.isfolder">
         <v-text-field
           v-model="payloadDocument.nom"
           type="text"
@@ -53,11 +54,16 @@ const payloadDocument = reactive({
           Create Doc
         </v-btn>
       </div>
-      <div v-if="isFolder">
+      <div v-if="payloadDocument.isfolder">
         <v-text-field
-          v-model="payloadFolder.description"
+          v-model="payloadDocument.nom"
           type="text"
           label="folder_name"
+        />
+        <v-text-field
+          v-model="payloadDocument.description"
+          type="text"
+          label="folder_description"
         />
         <v-btn @click="overlay = !overlay,postFolder(dataUrl, payloadDocument)">
           Create Folder

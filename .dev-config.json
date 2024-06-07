@@ -1,0 +1,9 @@
+{
+  "datasets": [
+    {
+      "href": "http://localhost:5888/data-fair/api/v1/datasets/s409o3gf4waea2fbpgwkheza",
+      "title": "Test-Document",
+      "id": "s409o3gf4waea2fbpgwkheza"
+    }
+  ]
+}
