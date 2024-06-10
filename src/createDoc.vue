@@ -1,6 +1,6 @@
 <script setup>
 import { reactive, ref } from 'vue'
-import { postDocumentParam, postFolder } from './request.js'
+import { postDocument, postFolder } from './request.js'
 
 const application = /** @type {import('@data-fair/lib/shared/application.js').Application} */ (window.APPLICATION)
 const config = /** @type {import('../config/.type/types.js').Config} */ (application.configuration)
@@ -50,7 +50,7 @@ const payloadDocument = reactive({
         <v-file-input
           v-model="payloadDocument.file"
           label="File input"
-        /><v-btn @click="overlay = !overlay,postDocumentParam(dataUrl, payloadDocument)">
+        /><v-btn @click="overlay = !overlay,postDocument(dataUrl, payloadDocument)">
           Create Doc
         </v-btn>
       </div>

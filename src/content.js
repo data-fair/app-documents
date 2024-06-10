@@ -1,4 +1,4 @@
-import { array, parentfolder, arrayDisplay } from './request.js'
+import { array, parentfolder, arrayDisplay, histoModif, hmDisplay } from './request.js'
 import { ref } from 'vue'
 export const pathGED = ref(new Map())
 
@@ -21,5 +21,15 @@ export async function changerAffichage (ligneId) {
     if (value.parentfolder === parentfolder.value) {
       arrayDisplay.value.set(key, value)
     }
+  })
+}
+
+export function afficherHistoriqueModif (ligneId) {
+  hmDisplay.value = []
+  const tab = histoModif.value.get(ligneId)
+  let date
+  tab.forEach((val) => {
+    date = new Date(parseInt(val))
+    hmDisplay.value.push(date.toLocaleString())
   })
 }
