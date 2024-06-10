@@ -3,9 +3,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "DATAFAIR_OWNER_ID=5a5dc47163ebd4a6f438589b:test DATAFAIR_API_KEY=bzo1YTVkYzQ3MTYzZWJkNGE2ZjQzODU4OWI6dGVzdDpNbnU5MUlaOTd3MHY2Y3V1Smhhdnc APP_URL=http://localhost:3000/app/ df-dev-server",
+    "dev": "DATAFAIR_OWNER_ID=5a5dc47163ebd4a6f438589b:test APP_URL=http://localhost:3000/app/ df-dev-server",
     "dev-src": "vite",
     "build": "vite build",
+    "build-test": "PUBLIC_URL=https://staging-koumoul.com/apps/documents/master/ vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore"
   },
