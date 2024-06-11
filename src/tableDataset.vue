@@ -1,5 +1,5 @@
 <script setup>
-import { getDataSet, deleteFile, patchDocument, loading2, arrayDisplay, deleteFolder, hmDisplay } from './request.js'
+import { getDataSet, deleteFile, patchDocument, arrayDisplay, deleteFolder, hmDisplay } from './request.js'
 import { computedAsync } from '@vueuse/core'
 import { ref, reactive } from 'vue'
 import { afficherHistoriqueModif, changerAffichage, pathGED } from './content.js'
@@ -7,7 +7,9 @@ const application = /** @type {import('@data-fair/lib/shared/application.js').Ap
 const config = /** @type {import('../config/.type/types.js').Config} */ (application.configuration)
 const dataUrl = config.datasets?.[0].href
 const properties = ['nom', 'taille', 'attachmentPath', 'version']
-const display = ref(false)
+const propertiesDisplay = ['Nom', 'Taille', 'Document numérique attaché', 'Version']
+const displayDocument = ref(false)
+const displayFolder = ref(false)
 const supprDisplay = ref(false)
 const showHistory = ref(false)
 const ligneId = ref('')
@@ -50,10 +52,14 @@ computedAsync(() => getDataSet(dataUrl), {})
       <thead>
         <tr>
           <th
-            v-for="p in properties"
+            v-for="p in propertiesDisplay"
             :key="p"
           >
-            {{ p }}
+            <span
+              v-if="p==='Nom'"
+              class="nom-display"
+            >{{ p }}</span>
+            <span v-else>{{ p }}</span>
           </th>
           <th>Actions </th>
         </tr>
@@ -90,13 +96,36 @@ computedAsync(() => getDataSet(dataUrl), {})
           </td>
           <td>
             <v-icon
+              v-if="value[1].isfolder===false"
+              v-tooltip="{
+                text: 'Editer le document',
+                location: 'right',
+                openDelay:'500'
+              }"
               class="v-icn-table"
-              @click="display=!display, ligneId=value[0]"
+              @click="displayDocument=!displayDocument, ligneId=value[0], displayFolder=false"
+            >
+              mdi-pencil
+            </v-icon>
+            <v-icon
+              v-else
+              v-tooltip="{
+                text: 'Editer le dossier',
+                location: 'right',
+                openDelay:'500'
+              }"
+              class="v-icn-table"
+              @click="displayDocument=!displayDocument, ligneId=value[0], displayFolder=true"
             >
               mdi-pencil
             </v-icon>
             <v-icon
               v-if="value[1].isfolder===true"
+              v-tooltip="{
+                text: 'Supprimer le dossier',
+                location: 'right',
+                openDelay:'500'
+              }"
               class="v-icn-table v-icn-delete"
               @click="supprDisplay=!supprDisplay"
             >
@@ -104,6 +133,11 @@ computedAsync(() => getDataSet(dataUrl), {})
             </v-icon>
             <v-icon
               v-else
+              v-tooltip="{
+                text: 'Supprimer le fichier',
+                location: 'right',
+                openDelay:'500'
+              }"
               class="v-icn-table v-icn-delete"
               @click="deleteFile(dataUrl,value[0])"
             >
@@ -111,82 +145,100 @@ computedAsync(() => getDataSet(dataUrl), {})
             </v-icon>
             <v-icon
               v-if="value[1].isfolder===false"
+              v-tooltip="{
+                text: 'Voir l\'historique des modifications',
+                location: 'right',
+                openDelay:'500'
+              }"
               class="v-icn-table"
-              @click="afficherHistoriqueModif(value[0]),showHistory=!showHistory"
+              @click="afficherHistoriqueModif(value[0]),showHistory=!showHistory,ligneId=value[0]"
             >
               mdi-history
             </v-icon>
-            <v-overlay
-              id="show-modif-history"
-              v-model="showHistory"
-            >
-              <v-card>
-                <div
-                  v-for="date in hmDisplay"
-                  :key="date"
-                >
-                  {{ date }}
-                </div>
-              </v-card>
-            </v-overlay>
-            <v-overlay
-              id="supprFolder"
-              v-model="supprDisplay"
-              :style="{ display: 'flex', justifyContent: 'center', alignItems: 'center'}"
-            >
-              <v-card>
-                Supprimer tout le contenu du dossier ?<br>
-                <v-btn @click="deleteFolder(dataUrl,value[0]), supprDisplay=!supprDisplay">
-                  Oui
-                </v-btn><v-btn @click="supprDisplay=!supprDisplay">
-                  Non
-                </v-btn>
-              </v-card>
-            </v-overlay>
-            <v-text-field
-              v-if="loading2"
-              color="success"
-              loading
-              disabled
-            />
           </td>
         </tr>
       </tbody>
     </v-table>
   </div>
+  <div id="delete-overlay">
+    <v-overlay
+      id="supprFolder"
+      v-model="supprDisplay"
+      class="overlay-center-table"
+    >
+      <v-card class="overlay-card-table">
+        <div class="text-history">
+          Supprimer tout le contenu du dossier ?
+        </div>
+        <v-btn
+          class="btn-valid-delete"
+          @click="deleteFolder(dataUrl,ligneId), supprDisplay=!supprDisplay"
+        >
+          Oui
+        </v-btn><v-btn
+          class="btn-valid-delete"
+          @click="supprDisplay=!supprDisplay"
+        >
+          Non
+        </v-btn>
+      </v-card>
+    </v-overlay>
+  </div>
+  <div id="histo-overlay">
+    <v-overlay
+      id="show-modif-history"
+      v-model="showHistory"
+      class="overlay-center-table"
+    >
+      <v-card class="overlay-card-table">
+        <div class="text-history">
+          Historique des modifications :
+        </div>
+        <div
+          v-for="(date,index) in hmDisplay"
+          :key="date"
+          class="text-date"
+        >
+          <v-icon v-if="index===0">
+            mdi-file-plus-outline
+          </v-icon>
+          <v-icon v-else>
+            mdi-file-document-edit-outline
+          </v-icon>
+          {{ date }}
+        </div>
+      </v-card>
+    </v-overlay>
+  </div>
   <div id="patchOverlay">
     <v-overlay
       id="ligne-edit"
-      v-model="display"
-      :style="{ display: 'flex', justifyContent: 'center', alignItems: 'center'}"
+      v-model="displayDocument"
+      class="overlay-center-table"
     >
-      <v-card
-        :style="{marginRight: '50px', paddingLeft:'50px',paddingRight:'50px'}"
-        width="200%"
-      >
-        <v-card>
-          <v-text-field
-            v-model="payloadDocument.nom"
-            type="text"
-            label="nom"
-          />
-          <v-text-field
-            v-model="payloadDocument.description"
-            type="text"
-            label="description"
-          />
-          <v-text-field
-            v-model="payloadDocument.version"
-            type="text"
-            label="version"
-          />
-          <v-file-input
-            v-model="payloadDocument.file"
-            label="File input"
-          /><v-btn @click="patchDocument(dataUrl,ligneId,payloadDocument), display=!display">
-            Modifier
-          </v-btn>
-        </v-card>
+      <v-card class="overlay-card">
+        <v-text-field
+          v-model="payloadDocument.nom"
+          type="text"
+          label="nom"
+        />
+        <v-text-field
+          v-model="payloadDocument.description"
+          type="text"
+          label="description"
+        />
+        <v-text-field
+          v-model="payloadDocument.version"
+          type="text"
+          label="version"
+        />
+        <v-file-input
+          v-if="!displayFolder"
+          v-model="payloadDocument.file"
+          label="File input"
+        /><v-btn @click="patchDocument(dataUrl,ligneId,payloadDocument,displayFolder), displayDocument=!displayDocument">
+          Modifier
+        </v-btn>
       </v-card>
     </v-overlay>
   </div>
@@ -213,4 +265,31 @@ a{
   padding-left:4px !important
 
   }
+
+.overlay-center-table{
+  justify-content: center;
+  align-items: center;
+  background-color: rgb(0,0,0,0) !important;
+}
+
+.overlay-card-table{
+  width:25em !important;
+  padding: 20px !important;
+  border:solid !important;
+}
+.btn-valid-delete{
+  margin-left: 5em;
+}
+
+.nom-display{
+  margin-left:3.3em
+}
+
+.text-history{
+  font-size: 1.5em;
+  margin-bottom:0.8em;
+}
+.text-date{
+  margin-bottom: 6px;
+}
 </style>

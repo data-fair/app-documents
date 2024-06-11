@@ -4,7 +4,7 @@ import createDoc from './createDoc.vue'
 </script>
 <template>
   <div>
-    <h2>Add Document : <createDoc /></h2>
+    <h2>Ajouter un document : <createDoc /></h2>
   </div>
   <div>
     <tableDataset />

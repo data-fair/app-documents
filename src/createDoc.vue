@@ -15,16 +15,20 @@ const payloadDocument = reactive({
 })
 </script>
 <template>
-  <v-btn @click="overlay=!overlay">
-    <v-icon>mdi-plus-circle</v-icon>
-  </v-btn>
+  <v-btn
+    density="comfortable"
+    class="icn-create-doc"
+    icon="mdi-plus"
+    elevation="5"
+    @click="overlay=!overlay"
+  />
+
   <v-overlay
     v-model="overlay"
-    :style="{ display: 'flex', justifyContent: 'center', alignItems: 'center'}"
+    class="overlay-center"
   >
     <v-card
-      :style="{marginRight: '50px', paddingLeft:'50px',paddingRight:'50px'}"
-      width="200%"
+      class="overlay-card"
     >
       <v-checkbox
         v-model="payloadDocument.isfolder"
@@ -72,3 +76,24 @@ const payloadDocument = reactive({
     </v-card>
   </v-overlay>
 </template>
+<style>
+.overlay-center{
+  justify-content: center;
+  align-items: center;
+  background-color: rgb(0,0,0,0.1);
+}
+
+.overlay-card{
+  width:25em;
+  padding: 20px
+}
+
+.icn-create-doc {
+  border-radius: 50%;
+  background-color: #1e88e5 !important;
+  display: inline-flex !important;
+  margin: 3px;
+  z-index: 1;
+  color:white
+}
+</style>
