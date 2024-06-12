@@ -22,7 +22,71 @@ export async function getValueField (key, dataUrl) {
   const reponse = await metaData.json()
   return reponse
 }
-
+export async function postFilesDD (filesInput, dataUrl) {
+  const files = []
+  for (let i = 0; i < filesInput.length; i++) {
+    files.push(filesInput.item(i))
+  }
+  const url = `${dataUrl}/lines`
+  files.forEach(async (file) => {
+    if (file.size === 0) { // we post a folder
+      const doc = {
+        nom: file.name,
+        isfolder: true,
+        parentfolder: parentfolder.value,
+        version: '',
+        description: ''
+      }
+      const params = {
+        method: 'POST',
+        body: JSON.stringify(doc),
+        headers: {
+          'Content-type': 'application/json'
+        }
+      }
+      const request = await fetch(url, params)
+      const reponse = await request.json()
+      if (request.status === 201) {
+        array.value.set(reponse._id, doc)
+        arrayDisplay.value.set(reponse._id, doc)
+      } else { console.log('erreur requete') }
+      return reponse
+    } else { // we post a file
+      const formData = new FormData()
+      formData.append('attachment', file)
+      formData.append('nom', file.name)
+      formData.append('description', '')
+      formData.append('version', '1')
+      formData.append('taille', file.size)
+      formData.append('isfolder', false)
+      formData.append('parentfolder', parentfolder.value)
+      formData.append('type_mime', file.type)
+      formData.append('historique_modification', file.lastModified.toString())
+      const params = {
+        method: 'POST',
+        body: formData
+      }
+      const request = await fetch(url, params)
+      const reponse = await request.json()
+      if (request.status === 201) {
+        const obj = {
+          attachmentPath: file.name,
+          nom: file.name,
+          taille: file.size,
+          version: '1',
+          description: '',
+          isfolder: false,
+          parentfolder: parentfolder.value,
+          type_mime: file.type
+        }
+        array.value.set(reponse._id, obj)
+        arrayDisplay.value.set(reponse._id, obj)
+        histoModif.value.set(reponse._id, [file.lastModified.toString()])
+      } else { console.log('erreur requete') }
+      return reponse
+    }
+  })
+}
 export async function postDocument (dataUrl, payload) {
   const { nom, description, version, file, isfolder } = payload
   const formData = new FormData()
