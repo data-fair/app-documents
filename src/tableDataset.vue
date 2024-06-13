@@ -1,5 +1,5 @@
 <script setup>
-import { getDataSet, deleteFile, patchDocument, arrayDisplay, deleteFolder, hmDisplay } from './request.js'
+import { getDataSet, deleteFile, arrayDisplay, deleteFolder, hmDisplay, patchDocument, downloadFile } from './request.js'
 import { computedAsync } from '@vueuse/core'
 import { ref, reactive } from 'vue'
 import { afficherHistoriqueModif, changerAffichage, pathGED } from './content.js'
@@ -278,6 +278,13 @@ computedAsync(() => getDataSet(dataUrl), {})
                       mdi-file-document-edit-outline
                     </v-icon>
                     {{ date }}
+                    <v-icon
+                      v-if="i!==hmDisplay.length-1"
+                      class="icn-download"
+                      @click="downloadFile(dataUrl,value[0],i)"
+                    >
+                      mdi-download-circle-outline
+                    </v-icon>
                   </div>
                 </v-card>
               </v-menu>
@@ -336,6 +343,8 @@ a{
   border-radius: 0.5em !important;
   padding-top:0.3em !important;
   padding-bottom:0.3em !important;
-  margin-top: 2.5em;
+}
+.icn-download{
+  color: #4caf50;
 }
 </style>

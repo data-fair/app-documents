@@ -29,5 +29,6 @@ coverage
 *.tsbuildinfo
 node_modules
 package.json
+package-lock.json
 .dev-config.json
 .eslintrc.csj

@@ -145,6 +145,7 @@ const menuFolder = ref(false)
   flex-direction: column;
 }
 .box2{
-  flex: 1
+  flex: 1;
 }
+
 </style>

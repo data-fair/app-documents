@@ -23,18 +23,8 @@ function onDrop (e) {
       @drop="onDrop"
       @dragover="prevDefault"
     >
-      <input
-        id="fileInput"
-        type="file"
-        mutliple
-        name="file"
-        hidden
-        @change="onChange"
-      >
       <div>
-        Déposer un ou plusieurs fichiers ici ou <label
-          for="fileInput"
-        ><u>cliquer ici</u> </label> pour télécharger.
+        Déposer un ou plusieurs fichiers ici
       </div>
     </div>
   </div>
