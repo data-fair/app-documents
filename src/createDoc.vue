@@ -1,7 +1,6 @@
 <script setup>
 import { reactive, ref } from 'vue'
 import { postDocument, postFolder } from './request.js'
-import DropFile from './dropFile.vue'
 
 const application = /** @type {import('@data-fair/lib/shared/application.js').Application} */ (window.APPLICATION)
 const config = /** @type {import('../config/.type/types.js').Config} */ (application.configuration)
@@ -19,101 +18,95 @@ const menuFolder = ref(false)
 
 </script>
 <template>
-  <div class="top-header">
-    <div class="box1">
-      <div>
-        <h2 class="h2-menu">
-          Ajouter un document :
-        </h2>
-        <div
-          id="post-document"
-          class="menu-document"
-        >
-          <v-menu
-            v-model="menuDoc"
-            :close-on-content-click="false"
-            location="end"
-          >
-            <template #activator="{ props }">
-              <v-btn
-                v-bind="props"
-                density="comfortable"
-                class="icn-create-doc"
-                icon="mdi-file-plus-outline"
-                elevation="5"
-              />
-            </template>
-            <v-card
-              class="menu-card"
-            >
-              <div>
-                <v-text-field
-                  v-model="payloadDocument.nom"
-                  type="text"
-                  label="Nom"
-                />
-                <v-file-input
-                  v-model="payloadDocument.file"
-                  label="Séléctionnez un fichier"
-                /><v-btn @click="payloadDocument.version='1',payloadDocument.isfolder=false,postDocument(dataUrl, payloadDocument), menuDoc = false">
-                  Ajouter fichier
-                </v-btn>
-              </div>
-            </v-card>
-          </v-menu>
+  <div
+    id="post-document"
+    class="menu-document menu-doc"
+  >
+    <v-menu
+      v-model="menuDoc"
+      :close-on-content-click="false"
+      location="end"
+    >
+      <template #activator="{ props }">
+        <v-btn
+          v-tooltip="{
+            text: 'Importer un fichier',
+            location: 'right',
+            openDelay:'500'
+          }"
+          v-bind="props"
+          density="comfortable"
+          class="icn-create-doc"
+          icon="mdi-file-plus-outline"
+          elevation="5"
+        />
+      </template>
+      <v-card
+        class="menu-card"
+      >
+        <div>
+          <v-text-field
+            v-model="payloadDocument.nom"
+            type="text"
+            label="Nom"
+          />
+          <v-file-input
+            v-model="payloadDocument.file"
+            label="Séléctionnez un fichier"
+          /><v-btn @click="payloadDocument.version='1',payloadDocument.isfolder=false,postDocument(dataUrl, payloadDocument), menuDoc = false">
+            Ajouter fichier
+          </v-btn>
         </div>
-      </div>
-      <div>
-        <h2 class="h2-menu">
-          Créer un dossier :
-        </h2>
-        <div
-          id="post-folder"
-          class="menu-document"
-        >
-          <v-menu
-            v-model="menuFolder"
-            :close-on-content-click="false"
-            location="end"
-          >
-            <template #activator="{ props }">
-              <v-btn
-                v-bind="props"
-                density="comfortable"
-                class="icn-create-doc"
-                icon="mdi-folder-plus-outline"
-                elevation="5"
-              />
-            </template>
-            <v-card
-              class="menu-card"
-            >
-              <div>
-                <v-text-field
-                  v-model="payloadDocument.nom"
-                  type="text"
-                  label="Nom"
-                />
-                <v-text-field
-                  v-model="payloadDocument.description"
-                  type="text"
-                  label="Description du dossier"
-                />
-                <v-btn @click="payloadDocument.version='',payloadDocument.isfolder=true,postFolder(dataUrl, payloadDocument), menuFolder = false">
-                  Créer dossier
-                </v-btn>
-              </div>
-            </v-card>
-          </v-menu>
+      </v-card>
+    </v-menu>
+  </div>
+  <div
+    id="post-folder"
+    class="menu-document"
+  >
+    <v-menu
+      v-model="menuFolder"
+      :close-on-content-click="false"
+      location="end"
+    >
+      <template #activator="{ props }">
+        <v-btn
+          v-tooltip="{
+            text: 'Créer un dossier',
+            location: 'right',
+            openDelay:'500'
+          }"
+          v-bind="props"
+          density="comfortable"
+          class="icn-create-doc"
+          icon="mdi-folder-plus-outline"
+          elevation="5"
+        />
+      </template>
+      <v-card
+        class="menu-card"
+      >
+        <div>
+          <v-text-field
+            v-model="payloadDocument.nom"
+            type="text"
+            label="Nom"
+          />
+          <v-text-field
+            v-model="payloadDocument.description"
+            type="text"
+            label="Description du dossier"
+          />
+          <v-btn @click="payloadDocument.version='',payloadDocument.isfolder=true,postFolder(dataUrl, payloadDocument), menuFolder = false">
+            Créer dossier
+          </v-btn>
         </div>
-      </div>
-    </div>
-    <div class="box2">
-      <DropFile />
-    </div>
+      </v-card>
+    </v-menu>
   </div>
 </template>
 <style>
+
 .overlay-center{
   justify-content: center;
   align-items: center;
@@ -121,8 +114,8 @@ const menuFolder = ref(false)
 }
 
 .menu-card{
-  width:25em;
-  padding: 20px
+  width:25em !important;
+  padding: 20px !important
 }
 
 .icn-create-doc {
@@ -131,10 +124,11 @@ const menuFolder = ref(false)
   display: inline-flex !important;
   margin: 3px;
   z-index: 1;
-  color:white
+  color:white !important
 }
-.menu-document, .h2-menu{
+.menu-document{
   display: inline !important;
+  margin-right: 4px
 }
 .top-header{
   display: flex;
@@ -143,9 +137,12 @@ const menuFolder = ref(false)
   margin-top:2em;
   display: flex;
   flex-direction: column;
+  padding-left: 1.5em;
 }
 .box2{
   flex: 1;
 }
-
+.menu-doc{
+  margin-right:0.5em;
+}
 </style>

@@ -1,8 +1,9 @@
 <script setup>
-import { getDataSet, deleteFile, arrayDisplay, deleteFolder, hmDisplay, patchDocument, downloadFile } from './request.js'
+import { getDataSet, deleteFile, arrayDisplay, deleteFolder, hmDisplay, patchDocument, downloadFile, loading, percentage } from './request.js'
 import { computedAsync } from '@vueuse/core'
 import { ref, reactive } from 'vue'
-import { afficherHistoriqueModif, changerAffichage, pathGED } from './content.js'
+import { afficherHistoriqueModif, changerAffichage, pathGED, displaySize } from './content.js'
+import CreateDoc from './createDoc.vue'
 const application = /** @type {import('@data-fair/lib/shared/application.js').Application} */ (window.APPLICATION)
 const config = /** @type {import('../config/.type/types.js').Config} */ (application.configuration)
 const dataUrl = config.datasets?.[0].href
@@ -24,7 +25,6 @@ computedAsync(() => getDataSet(dataUrl), {})
 <template>
   <div
     id="table-data"
-    class="table-data"
   >
     <v-banner
       class="banner-path"
@@ -36,22 +36,38 @@ computedAsync(() => getDataSet(dataUrl), {})
       >
         mdi-home
       </v-icon>
-      <div
-        v-for="(value,_) in pathGED"
-        :key="value[1]"
-      >
-        <v-btn
-          class="v-btn-path"
-          density="default"
-          :ripple="false"
-          elevation="0"
-          @click="changerAffichage(value[0])"
+      <v-banner-text>
+        <div
+          v-for="(value,_) in pathGED"
+          :key="value[1]"
+          :style="{display: 'inline'}"
         >
-          {{ value[1] }}
-        </v-btn> /
-      </div>
+          <v-btn
+            class="v-btn-path"
+            density="default"
+            :ripple="false"
+            elevation="0"
+            @click="changerAffichage(value[0])"
+          >
+            {{ value[1] }}
+          </v-btn> /
+        </div>
+      </v-banner-text>
+      <template
+        #actions
+      >
+        <div class="banner-btn">
+          <CreateDoc />
+        </div>
+      </template>
     </v-banner>
-    <v-table density="compact">
+  </div>
+  <div class="table-container">
+    <v-table
+      density="compact"
+      fixed-header
+      class="table-v-data"
+    >
       <thead>
         <tr>
           <th
@@ -95,7 +111,7 @@ computedAsync(() => getDataSet(dataUrl), {})
               class="a-attached-file"
               :href="`${dataUrl}/attachments/${value[0]}/${value[1][p]}`"
             >{{ value[1][p] }}</a>
-            <span v-else>{{ value[1][p] }}</span>
+            <span v-else-if="p==='taille' && value[1].isfolder===false">{{ displaySize(value[1][p]) }}</span>
           </td>
           <td>
             <div
@@ -285,10 +301,21 @@ computedAsync(() => getDataSet(dataUrl), {})
                     >
                       mdi-download-circle-outline
                     </v-icon>
+                    <span v-else>: Version actuelle</span>
                   </div>
                 </v-card>
               </v-menu>
             </div>
+          </td>
+        </tr>
+        <tr v-if="loading">
+          <td colspan="5">
+            <v-progress-linear
+              v-model="percentage"
+              height="25"
+              class="progress-bar"
+              color="success"
+            />
           </td>
         </tr>
       </tbody>
@@ -321,7 +348,6 @@ a{
 .history-card{
   width:25em !important;
   padding: 20px !important;
-  border:solid !important;
 }
 .btn-valid-delete{
   margin-left: 5em;
@@ -343,8 +369,37 @@ a{
   border-radius: 0.5em !important;
   padding-top:0.3em !important;
   padding-bottom:0.3em !important;
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center
 }
 .icn-download{
   color: #4caf50;
+}
+.banner-btn{
+  display: flex;
+}
+.v-banner-actions{
+  margin:0px !important;
+}
+.v-banner {
+    flex: 0 0 auto;
+    padding: 10px;
+    width: 100%;
+    box-sizing: border-box;
+}
+.table-container {
+    display : flex !important;
+    flex: 1 !important;
+    overflow: auto !important;
+    width: 100%;
+    box-sizing: border-box;
+}
+.table-v-data{
+  width: 100%;
+}
+.progress-bar{
+  width:100%;
+  opacity:0.7
 }
 </style>

@@ -1,18 +1,18 @@
 <script setup>
-import { ref } from 'vue'
 import { postFilesDD } from './request.js'
 const application = /** @type {import('@data-fair/lib/shared/application.js').Application} */ (window.APPLICATION)
 const config = /** @type {import('../config/.type/types.js').Config} */ (application.configuration)
 const dataUrl = config.datasets?.[0].href
-const filesInput = ref(null)
 function prevDefault (ev) {
   // Prevent default behavior (Prevent file from being opened)
   ev.preventDefault()
 }
 function onDrop (e) {
   e.preventDefault()
-  filesInput.value = e.dataTransfer.files
-  postFilesDD(filesInput.value, dataUrl)
+  postFilesDD(e.dataTransfer.files, dataUrl)
+}
+function sendFiles (e) {
+  postFilesDD(e.target.files, dataUrl)
 }
 </script>
 <template>
@@ -23,9 +23,20 @@ function onDrop (e) {
       @drop="onDrop"
       @dragover="prevDefault"
     >
-      <div>
+      <div class="text-dd">
         Déposer un ou plusieurs fichiers ici
       </div>
+      <label
+        for="file"
+      >ou cliquer <u>ici</u></label>
+      <input
+        id="file"
+        type="file"
+        name="file"
+        multiple
+        hidden
+        @change="sendFiles"
+      >
     </div>
   </div>
 </template>
@@ -33,8 +44,13 @@ function onDrop (e) {
 .drop-zone{
     margin:2em;
     margin-left:5em;
+    margin-right:5em;
+    text-align: center;
     padding: 2em;
     background: #f0f9ff;
     border: 5px dotted #1e88e5;
+}
+.text-dd{
+  font-size: 1.2em;
 }
 </style>
