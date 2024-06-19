@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "DATAFAIR_OWNER_ID=5a5dc47163ebd4a6f438589b:test APP_URL=http://localhost:3000/app/ df-dev-server",
+    "dev": " APP_URL=http://localhost:3000/app/ df-dev-server",
     "dev-src": "vite",
     "build": "vite build",
     "build-test": "PUBLIC_URL=https://staging-koumoul.com/apps/documents/master/ vite build",

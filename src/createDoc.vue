@@ -1,11 +1,9 @@
 <script setup>
 import { reactive, ref } from 'vue'
 import { postDocument, postFolder } from './request.js'
-
 const application = /** @type {import('@data-fair/lib/shared/application.js').Application} */ (window.APPLICATION)
 const config = /** @type {import('../config/.type/types.js').Config} */ (application.configuration)
-const dataUrl = config.datasets?.[0].href
-
+const dataUrl = 'http://localhost:5888/data-fair/api/v1/datasets/ccyum-yt3t8o9ywu4iggjlbz'
 const payloadDocument = reactive({
   nom: '',
   description: '',

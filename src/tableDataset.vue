@@ -1,26 +1,51 @@
 <script setup>
-import { getDataSet, deleteFile, arrayDisplay, deleteFolder, hmDisplay, patchDocument, downloadFile, loading, percentage } from './request.js'
-import { computedAsync } from '@vueuse/core'
-import { ref, reactive } from 'vue'
-import { afficherHistoriqueModif, changerAffichage, pathGED, displaySize } from './content.js'
+import { getSet, deleteFile, dataset, deleteFolder, hmDisplay, patchDocument, downloadFile, parentfolder, displayError, getRevisions } from './request.js'
+import { ref, reactive, onMounted } from 'vue'
+import { changerAffichage, pathGED, displaySize } from './content.js'
 import CreateDoc from './createDoc.vue'
+import reactiveSearchParams from '@data-fair/lib/vue/reactive-search-params-global.js'
 const application = /** @type {import('@data-fair/lib/shared/application.js').Application} */ (window.APPLICATION)
 const config = /** @type {import('../config/.type/types.js').Config} */ (application.configuration)
-const dataUrl = config.datasets?.[0].href
-const properties = ['nom', 'taille', 'attachmentPath', 'version']
-const propertiesDisplay = ['Nom', 'Taille', 'Document numérique attaché', 'Version']
+const dataUrl = 'http://localhost:5888/data-fair/api/v1/datasets/ccyum-yt3t8o9ywu4iggjlbz'
+const properties = ['nom', 'taille', 'version']
+const propertiesDisplay = ['Nom', 'Taille', 'Version']
 const menuHistory = ref([])
 const menuEditDoc = ref([])
 const menuEditFolder = ref([])
 const menuDelete = ref([])
 const ligneId = ref('')
+const dossier = ref(false)
 const payloadDocument = reactive({
   nom: '',
   description: '',
   version: '',
   file: ''
 })
-computedAsync(() => getDataSet(dataUrl), {})
+onMounted(async () => {
+  let table
+  try {
+    table = reactiveSearchParams.pathGED.split(',')
+  } catch (error) {
+    table = ['']
+  }
+  if (table[0] === '') {
+    parentfolder.value = '0'
+    getSet(dataUrl)
+  } else {
+    for (let i = 0; i < table.length; i++) {
+      const url = `${dataUrl}/lines/${table[i]}`
+      const request = await fetch(url)
+      if (request.status === 200) {
+        const rep = await request.json()
+        pathGED.value.set(table[i], rep.nom)
+      } else {
+        displayError.value = true
+      }
+    }
+    parentfolder.value = table[table.length - 1]
+    getSet(dataUrl)
+  }
+})
 </script>
 <template>
   <div
@@ -32,7 +57,7 @@ computedAsync(() => getDataSet(dataUrl), {})
     >
       <v-icon
         class="v-icn-table"
-        @click="changerAffichage('')"
+        @click="changerAffichage('0',dataUrl),parentfolder='0'"
       >
         mdi-home
       </v-icon>
@@ -47,7 +72,7 @@ computedAsync(() => getDataSet(dataUrl), {})
             density="default"
             :ripple="false"
             elevation="0"
-            @click="changerAffichage(value[0])"
+            @click="changerAffichage(value[0],dataUrl)"
           >
             {{ value[1] }}
           </v-btn> /
@@ -86,7 +111,7 @@ computedAsync(() => getDataSet(dataUrl), {})
 
       <tbody>
         <tr
-          v-for="(value,index) in arrayDisplay"
+          v-for="(value,index) in dataset"
           :key="value[0]"
         >
           <td
@@ -96,21 +121,23 @@ computedAsync(() => getDataSet(dataUrl), {})
             <span v-if="value[1].isfolder===true&&p==='nom'">
               <v-icon
                 class="v-icn-table"
-                @click="changerAffichage(value[0])"
+                @click="changerAffichage(value[0],dataUrl)"
               >
                 mdi-folder
-              </v-icon>{{ value[1][p] }}</span>
+              </v-icon><div
+                class="text-nav"
+                @click="changerAffichage(value[0],dataUrl)"
+              >{{ value[1][p] }}</div></span>
             <span v-else-if="p==='nom'">
               <v-icon class="v-btn-table-file">
                 mdi-file-outline
               </v-icon>
-              {{ value[1][p] }}
+              <div
+                :style="{display: 'inline',
+                         marginLeft : '10px'
+                }"
+              >{{ value[1][p] }}</div>
             </span>
-            <a
-              v-else-if="p==='attachmentPath' && value[1].isfolder===false"
-              class="a-attached-file"
-              :href="`${dataUrl}/attachments/${value[0]}/${value[1][p]}`"
-            >{{ value[1][p] }}</a>
             <span v-else-if="p==='taille' && value[1].isfolder===false">{{ displaySize(value[1][p]) }}</span>
           </td>
           <td>
@@ -216,7 +243,7 @@ computedAsync(() => getDataSet(dataUrl), {})
                     }"
                     v-bind="props"
                     class="v-icn-table v-icn-delete"
-                    @click="deleteFile(dataUrl,value[0]),ligneId=value[0],menuDelete[index]=false"
+                    @click="ligneId=value[0],dossier=false"
                   >
                     mdi-delete
                   </v-icon>
@@ -229,18 +256,40 @@ computedAsync(() => getDataSet(dataUrl), {})
                     }"
                     v-bind="props"
                     class="v-icn-table v-icn-delete"
-                    @click="ligneId=value[0]"
+                    @click="ligneId=value[0],dossier=true"
                   >
                     mdi-delete
                   </v-icon>
                 </template>
-                <v-card class="menu-card">
+                <v-card
+                  v-if="dossier"
+                  class="menu-card"
+                >
                   <div class="text-history">
                     Supprimer tout le contenu du dossier ?
                   </div>
                   <v-btn
                     class="btn-valid-delete"
                     @click="deleteFolder(dataUrl,ligneId),menuDelete[index]=false"
+                  >
+                    Oui
+                  </v-btn><v-btn
+                    class="btn-valid-delete"
+                    @click="menuDelete[index]=false"
+                  >
+                    Non
+                  </v-btn>
+                </v-card>
+                <v-card
+                  v-else
+                  class="menu-card"
+                >
+                  <div class="text-history">
+                    Supprimer le fichier ?
+                  </div>
+                  <v-btn
+                    class="btn-valid-delete"
+                    @click="deleteFile(dataUrl,ligneId),menuDelete[index]=false"
                   >
                     Oui
                   </v-btn><v-btn
@@ -273,7 +322,7 @@ computedAsync(() => getDataSet(dataUrl), {})
                     }"
                     v-bind="props"
                     class="v-icn-table"
-                    @click="afficherHistoriqueModif(value[0]),ligneId=value[0]"
+                    @click="getRevisions(dataUrl,value[0])"
                   >
                     mdi-history
                   </v-icon>
@@ -283,8 +332,8 @@ computedAsync(() => getDataSet(dataUrl), {})
                     Historique des modifications :
                   </div>
                   <div
-                    v-for="(date,i) in hmDisplay"
-                    :key="date"
+                    v-for="(o,i) in hmDisplay"
+                    :key="o"
                     class="text-date"
                   >
                     <v-icon v-if="i===0">
@@ -293,11 +342,11 @@ computedAsync(() => getDataSet(dataUrl), {})
                     <v-icon v-else>
                       mdi-file-document-edit-outline
                     </v-icon>
-                    {{ date }}
+                    {{ o._updatedAt }}
                     <v-icon
                       v-if="i!==hmDisplay.length-1"
                       class="icn-download"
-                      @click="downloadFile(dataUrl,value[0],i)"
+                      @click="downloadFile(dataUrl,o.attachmentPath,o.nom)"
                     >
                       mdi-download-circle-outline
                     </v-icon>
@@ -306,16 +355,18 @@ computedAsync(() => getDataSet(dataUrl), {})
                 </v-card>
               </v-menu>
             </div>
-          </td>
-        </tr>
-        <tr v-if="loading">
-          <td colspan="5">
-            <v-progress-linear
-              v-model="percentage"
-              height="25"
-              class="progress-bar"
-              color="success"
-            />
+            <v-icon
+              v-if="value[1].isfolder===false"
+              v-tooltip="{
+                text: 'Télécharger le fichier',
+                location: 'right',
+                openDelay:'500'
+              }"
+              class="v-icn-table"
+              @click="downloadFile(dataUrl,value[1].attachmentPath,value[1].nom)"
+            >
+              mdi-download
+            </v-icon>
           </td>
         </tr>
       </tbody>
@@ -398,8 +449,16 @@ a{
 .table-v-data{
   width: 100%;
 }
-.progress-bar{
-  width:100%;
-  opacity:0.7
+
+.text-nav{
+  display: inline;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-right:10px;
+  padding-left:10px;
+}
+.text-nav:hover{
+  background-color: rgb(220, 220, 220);
+  cursor:pointer;
 }
 </style>

@@ -1,15 +1,12 @@
-import { dataset, parentfolder, arrayDisplay, histoModif, hmDisplay } from './request.js'
-import { ref } from 'vue' // key : id, value : name of the associated folder, it represents the navigation bar upon the data table
+import { dataset, parentfolder, getSet } from './request.js'
+import { ref } from 'vue'
 import reactiveSearchParams from '@data-fair/lib/vue/reactive-search-params-global.js'
-export const pathGED = ref(new Map())
+export const pathGED = ref(new Map()) // key : id, value : name of the associated folder, it represents the navigation bar upon the data table
 /* those methodes are used to handle the display when clicked on folder
-or when clicked on show history, it modifiy arrayDisplay, hmDisplay and pathGED values
 */
-
-export async function changerAffichage (ligneId) {
+export async function changerAffichage (ligneId, dataUrl) {
   parentfolder.value = ligneId
-  arrayDisplay.value.clear()
-  if (ligneId === '') {
+  if (ligneId === '0') {
     pathGED.value.clear()
   } else if (pathGED.value.has(ligneId)) {
     const keys = Array.from(pathGED.value.keys())
@@ -21,25 +18,10 @@ export async function changerAffichage (ligneId) {
   } else {
     pathGED.value.set(ligneId, dataset.value.get(ligneId).nom)
   }
-  dataset.value.forEach((value, key) => {
-    if (value.parentfolder === parentfolder.value) {
-      arrayDisplay.value.set(key, value)
-    }
-  })
-  reactiveSearchParams.parentFolder = ligneId
+  dataset.value.clear()
+  await getSet(dataUrl)
   reactiveSearchParams.pathGED = Array.from(pathGED.value.keys())
 }
-
-export function afficherHistoriqueModif (ligneId) {
-  hmDisplay.value = []
-  const tab = histoModif.value.get(ligneId)
-  let date
-  tab.forEach((val) => {
-    date = new Date(parseInt(val))
-    hmDisplay.value.push(date.toLocaleString())
-  })
-}
-
 export function displaySize (n) {
   let res
   if (n / 1000000000 > 1) { // display Go
