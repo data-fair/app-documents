@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": " APP_URL=http://localhost:3000/app/ df-dev-server",
+    "dev": "  APP_URL=http://localhost:3000/app/ df-dev-server",
     "dev-src": "vite",
     "build": "vite build",
     "build-test": "PUBLIC_URL=https://staging-koumoul.com/apps/documents/master/ vite build",

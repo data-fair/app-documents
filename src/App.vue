@@ -1,7 +1,7 @@
 <script setup>
 import tableDataset from './tableDataset.vue'
 import DropFile from './dropFile.vue'
-import { displayError } from './request'
+import { displayError, errorMessage } from './request'
 </script>
 <template>
   <div class="container">
@@ -19,9 +19,11 @@ import { displayError } from './request'
   <div>
     <v-snackbar
       v-model="displayError"
-      class="display-error"
+      :timeout="'5000'"
     >
-      <div>Error</div>
+      <div>
+        {{ errorMessage }}
+      </div>
     </v-snackbar>
   </div>
 </template>
@@ -30,7 +32,8 @@ import { displayError } from './request'
   display: flex;
   flex-direction: column;
   height: 100vh;
-  width: 100%
+  width: 100%;
+  overflow : hidden;
 }
 .drop-file {
     flex: 0 0 15%;

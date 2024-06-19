@@ -57,7 +57,7 @@ onMounted(async () => {
     >
       <v-icon
         class="v-icn-table"
-        @click="changerAffichage('0',dataUrl),parentfolder='0'"
+        @click="changerAffichage('0',dataUrl)"
       >
         mdi-home
       </v-icon>
