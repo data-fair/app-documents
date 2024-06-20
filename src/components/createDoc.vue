@@ -1,16 +1,10 @@
 <script setup>
-import { reactive, ref } from 'vue'
-import { postDocument, postFolder } from './request.js'
-const application = /** @type {import('@data-fair/lib/shared/application.js').Application} */ (window.APPLICATION)
-const config = /** @type {import('../config/.type/types.js').Config} */ (application.configuration)
-const dataUrl = 'http://localhost:5888/data-fair/api/v1/datasets/ccyum-yt3t8o9ywu4iggjlbz'
-const payloadDocument = reactive({
-  nom: '',
-  description: '',
-  version: '',
-  file: '',
-  isfolder: false
-})
+import { ref } from 'vue'
+import { postDocument } from '../assets/request.js'
+import useAppInfo from '@/composables/useAppInfo.js'
+
+const { payloadDocument } = useAppInfo()
+
 const menuDoc = ref(false)
 const menuFolder = ref(false)
 
@@ -51,7 +45,7 @@ const menuFolder = ref(false)
           <v-file-input
             v-model="payloadDocument.file"
             label="Séléctionnez un fichier"
-          /><v-btn @click="payloadDocument.version='1',payloadDocument.isfolder=false,postDocument(dataUrl, payloadDocument), menuDoc = false">
+          /><v-btn @click="postDocument(payloadDocument), menuDoc = false">
             Ajouter fichier
           </v-btn>
         </div>
@@ -84,21 +78,14 @@ const menuFolder = ref(false)
       <v-card
         class="menu-card"
       >
-        <div>
-          <v-text-field
-            v-model="payloadDocument.nom"
-            type="text"
-            label="Nom"
-          />
-          <v-text-field
-            v-model="payloadDocument.description"
-            type="text"
-            label="Description du dossier"
-          />
-          <v-btn @click="payloadDocument.version='',payloadDocument.isfolder=true,postFolder(dataUrl, payloadDocument), menuFolder = false">
-            Créer dossier
-          </v-btn>
-        </div>
+        <v-text-field
+          v-model="payloadDocument.nom"
+          type="text"
+          label="Nom"
+        />
+        <v-btn @click="payloadDocument.file=null,postDocument(payloadDocument), menuFolder = false">
+          Créer dossier
+        </v-btn>
       </v-card>
     </v-menu>
   </div>

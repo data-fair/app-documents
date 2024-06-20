@@ -1,7 +1,7 @@
 {
   "datasets": [
     {
-      "href": "http://localhost:5888/data-fairapi/v1/datasets/ccyum-yt3t8o9ywu4iggjlbz",
+      "href": "http://localhost:5888/data-fair/api/v1/datasets/ccyum-yt3t8o9ywu4iggjlbz",
       "title": "Test-GED",
       "id": "ccyum-yt3t8o9ywu4iggjlbz"
     }

@@ -1,19 +1,20 @@
 <script setup>
-import tableDataset from './tableDataset.vue'
-import DropFile from './dropFile.vue'
-import { displayError, errorMessage } from './request'
+import tableDataset from './components/tableDataset.vue'
+import dropFile from './components/dropFile.vue'
+import { displayError, errorMessage } from './assets/request.js'
+
 </script>
 <template>
   <div class="container">
     <div
-      class="drop-file"
-    >
-      <DropFile />
-    </div>
-    <div
       class="table-data-path"
     >
-      <tableDataset />
+      <table-dataset />
+    </div>
+    <div
+      class="drop-file"
+    >
+      <drop-file />
     </div>
   </div>
   <div>

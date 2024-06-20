@@ -1,49 +1,28 @@
 <script setup>
-import { getSet, deleteFile, dataset, deleteFolder, hmDisplay, patchDocument, downloadFile, parentfolder, displayError, getRevisions } from './request.js'
-import { ref, reactive, onMounted } from 'vue'
-import { changerAffichage, pathGED, displaySize } from './content.js'
-import CreateDoc from './createDoc.vue'
+import { deleteFile, deleteFolder, hmDisplay, patchDocument, downloadFile, getRevisions, pathGED } from '../assets/request.js'
+import { ref, onMounted } from 'vue'
+import { changerAffichage, displaySize } from '../assets/content.js'
 import reactiveSearchParams from '@data-fair/lib/vue/reactive-search-params-global.js'
-const application = /** @type {import('@data-fair/lib/shared/application.js').Application} */ (window.APPLICATION)
-const config = /** @type {import('../config/.type/types.js').Config} */ (application.configuration)
-const dataUrl = 'http://localhost:5888/data-fair/api/v1/datasets/ccyum-yt3t8o9ywu4iggjlbz'
-const properties = ['nom', 'taille', 'version']
-const propertiesDisplay = ['Nom', 'Taille', 'Version']
+import CreateDoc from './createDoc.vue'
+import useAppInfo from '@/composables/useAppInfo.js'
+import { data, path } from '../context.js'
+const { dataUrl, payloadDocument } = useAppInfo()
+const properties = ['nom', 'taille', 'path', 'nbrevisions']
+const propertiesDisplay = ['Nom', 'Taille', 'path', 'NbRevisions']
 const menuHistory = ref([])
 const menuEditDoc = ref([])
 const menuEditFolder = ref([])
 const menuDelete = ref([])
-const ligneId = ref('')
 const dossier = ref(false)
-const payloadDocument = reactive({
-  nom: '',
-  description: '',
-  version: '',
-  file: ''
-})
-onMounted(async () => {
-  let table
+onMounted(() => {
   try {
-    table = reactiveSearchParams.pathGED.split(',')
-  } catch (error) {
-    table = ['']
-  }
-  if (table[0] === '') {
-    parentfolder.value = '0'
-    getSet(dataUrl)
-  } else {
-    for (let i = 0; i < table.length; i++) {
-      const url = `${dataUrl}/lines/${table[i]}`
-      const request = await fetch(url)
-      if (request.status === 200) {
-        const rep = await request.json()
-        pathGED.value.set(table[i], rep.nom)
-      } else {
-        displayError.value = true
-      }
-    }
-    parentfolder.value = table[table.length - 1]
-    getSet(dataUrl)
+    path.value = reactiveSearchParams.path
+    pathGED.value = path.value.split('/')
+    pathGED.value.pop()
+    pathGED.value.shift()
+  } catch (e) {
+    path.value = '/'
+    pathGED.value = []
   }
 })
 </script>
@@ -57,14 +36,14 @@ onMounted(async () => {
     >
       <v-icon
         class="v-icn-table"
-        @click="changerAffichage('0',dataUrl)"
+        @click="changerAffichage('/')"
       >
         mdi-home
       </v-icon>
       <v-banner-text>
         <div
-          v-for="(value,_) in pathGED"
-          :key="value[1]"
+          v-for="(value) in pathGED"
+          :key="value"
           :style="{display: 'inline'}"
         >
           <v-btn
@@ -72,9 +51,9 @@ onMounted(async () => {
             density="default"
             :ripple="false"
             elevation="0"
-            @click="changerAffichage(value[0],dataUrl)"
+            @click="changerAffichage(value)"
           >
-            {{ value[1] }}
+            {{ value }}
           </v-btn> /
         </div>
       </v-banner-text>
@@ -111,22 +90,22 @@ onMounted(async () => {
 
       <tbody>
         <tr
-          v-for="(value,index) in dataset"
+          v-for="(value,index) in data"
           :key="value[0]"
         >
           <td
             v-for="p in properties"
             :key="p"
           >
-            <span v-if="value[1].isfolder===true&&p==='nom'">
+            <span v-if="value[1].attachmentPath===undefined&&p==='nom'">
               <v-icon
                 class="v-icn-table"
-                @click="changerAffichage(value[0],dataUrl)"
+                @click="changerAffichage(value[1].nom)"
               >
                 mdi-folder
               </v-icon><div
                 class="text-nav"
-                @click="changerAffichage(value[0],dataUrl)"
+                @click="changerAffichage(value[1].nom)"
               >{{ value[1][p] }}</div></span>
             <span v-else-if="p==='nom'">
               <v-icon class="v-btn-table-file">
@@ -138,11 +117,12 @@ onMounted(async () => {
                 }"
               >{{ value[1][p] }}</div>
             </span>
-            <span v-else-if="p==='taille' && value[1].isfolder===false">{{ displaySize(value[1][p]) }}</span>
+            <span v-else-if="p==='taille' && value[1].attachmentPath!==undefined">{{ displaySize(value[1][p]) }}</span>
+            <span v-else>{{ value[1][p] }}</span>
           </td>
           <td>
             <div
-              v-if="value[1].isfolder===false"
+              v-if="value[1].attachmentPath!==undefined"
               id="edit-document"
               class="menu-document"
             >
@@ -161,7 +141,6 @@ onMounted(async () => {
                     }"
                     v-bind="props"
                     class="v-icn-table"
-                    @click="ligneId=value[0]"
                   >
                     mdi-pencil
                   </v-icon>
@@ -175,14 +154,14 @@ onMounted(async () => {
                   <v-file-input
                     v-model="payloadDocument.file"
                     label="File input"
-                  /><v-btn @click="patchDocument(dataUrl,ligneId,payloadDocument,false), menuEditDoc[index]=false">
+                  /><v-btn @click="patchDocument(value[0],payloadDocument,false), menuEditDoc[index]=false">
                     Modifier
                   </v-btn>
                 </v-card>
               </v-menu>
             </div>
             <div
-              v-if="value[1].isfolder===true"
+              v-if="value[1].attachmentPath===undefined"
               id="edit-folder"
               class="menu-document"
             >
@@ -201,7 +180,6 @@ onMounted(async () => {
                     }"
                     v-bind="props"
                     class="v-icn-table"
-                    @click="ligneId=value[0]"
                   >
                     mdi-pencil
                   </v-icon>
@@ -212,12 +190,7 @@ onMounted(async () => {
                     type="text"
                     label="Nouveau nom"
                   />
-                  <v-text-field
-                    v-model="payloadDocument.description"
-                    type="text"
-                    label="Nouvelle description"
-                  />
-                  <v-btn @click="patchDocument(dataUrl,ligneId,payloadDocument,true), menuEditFolder[index]=false">
+                  <v-btn @click="patchDocument(value[0],payloadDocument,true),menuEditFolder[index]=false">
                     Modifier
                   </v-btn>
                 </v-card>
@@ -235,7 +208,7 @@ onMounted(async () => {
               >
                 <template #activator="{ props }">
                   <v-icon
-                    v-if="value[1].isfolder===false"
+                    v-if="value[1].attachmentPath!==undefined"
                     v-tooltip="{
                       text: 'Supprimer le fichier',
                       location: 'right',
@@ -243,7 +216,7 @@ onMounted(async () => {
                     }"
                     v-bind="props"
                     class="v-icn-table v-icn-delete"
-                    @click="ligneId=value[0],dossier=false"
+                    @click="dossier=false"
                   >
                     mdi-delete
                   </v-icon>
@@ -256,7 +229,7 @@ onMounted(async () => {
                     }"
                     v-bind="props"
                     class="v-icn-table v-icn-delete"
-                    @click="ligneId=value[0],dossier=true"
+                    @click="dossier=true"
                   >
                     mdi-delete
                   </v-icon>
@@ -270,7 +243,7 @@ onMounted(async () => {
                   </div>
                   <v-btn
                     class="btn-valid-delete"
-                    @click="deleteFolder(dataUrl,ligneId),menuDelete[index]=false"
+                    @click="deleteFolder(value[1]['path'],value[1]['nom'], value[0]),menuDelete[index]=false"
                   >
                     Oui
                   </v-btn><v-btn
@@ -289,7 +262,7 @@ onMounted(async () => {
                   </div>
                   <v-btn
                     class="btn-valid-delete"
-                    @click="deleteFile(dataUrl,ligneId),menuDelete[index]=false"
+                    @click="deleteFile(value[0]),menuDelete[index]=false"
                   >
                     Oui
                   </v-btn><v-btn
@@ -302,7 +275,7 @@ onMounted(async () => {
               </v-menu>
             </div>
             <div
-              v-if="value[1].isfolder===false"
+              v-if="value[1].attachmentPath!==undefined"
               id="menu-history"
               class="menu-document"
             >
@@ -346,7 +319,7 @@ onMounted(async () => {
                     <v-icon
                       v-if="i!==hmDisplay.length-1"
                       class="icn-download"
-                      @click="downloadFile(dataUrl,o.attachmentPath,o.nom)"
+                      @click="downloadFile(o.attachmentPath,o.nom)"
                     >
                       mdi-download-circle-outline
                     </v-icon>
@@ -356,14 +329,14 @@ onMounted(async () => {
               </v-menu>
             </div>
             <v-icon
-              v-if="value[1].isfolder===false"
+              v-if="value[1].attachmentPath!==undefined"
               v-tooltip="{
                 text: 'Télécharger le fichier',
                 location: 'right',
                 openDelay:'500'
               }"
               class="v-icn-table"
-              @click="downloadFile(dataUrl,value[1].attachmentPath,value[1].nom)"
+              @click="downloadFile(value[1].attachmentPath,value[1].nom)"
             >
               mdi-download
             </v-icon>

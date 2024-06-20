@@ -1,8 +1,8 @@
 <script setup>
-import { postFilesDD, loading, percentage } from './request.js'
-const application = /** @type {import('@data-fair/lib/shared/application.js').Application} */ (window.APPLICATION)
-const config = /** @type {import('../config/.type/types.js').Config} */ (application.configuration)
-const dataUrl = 'http://localhost:5888/data-fair/api/v1/datasets/ccyum-yt3t8o9ywu4iggjlbz'
+import useAppInfo from '@/composables/useAppInfo.js'
+import { postFilesDD, loading, percentage } from '../assets/request.js'
+
+const { dataUrl } = useAppInfo()
 function prevDefault (ev) {
   // Prevent default behavior (Prevent file from being opened)
   ev.preventDefault()
