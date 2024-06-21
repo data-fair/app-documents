@@ -1,12 +1,12 @@
 <script setup>
-import { deleteFile, deleteFolder, hmDisplay, patchDocument, downloadFile, getRevisions, pathGED } from '../assets/request.js'
+import { deleteFile, deleteFolder, hmDisplay, patchDocument, downloadFile, getRevisions, pathGED, loading, percentage } from '../assets/request.js'
 import { ref, onMounted } from 'vue'
 import { changerAffichage, displaySize } from '../assets/content.js'
 import reactiveSearchParams from '@data-fair/lib/vue/reactive-search-params-global.js'
 import CreateDoc from './createDoc.vue'
 import useAppInfo from '@/composables/useAppInfo.js'
 import { data, path } from '../context.js'
-const { dataUrl, payloadDocument } = useAppInfo()
+const { payloadDocument } = useAppInfo()
 const properties = ['nom', 'taille', 'path', 'nbrevisions']
 const propertiesDisplay = ['Nom', 'Taille', 'path', 'NbRevisions']
 const menuHistory = ref([])
@@ -27,6 +27,15 @@ onMounted(() => {
 })
 </script>
 <template>
+  <div class="wrapper-bar">
+    <v-progress-linear
+      v-show="loading"
+      v-model="percentage"
+      height="10"
+      class="progress-bar"
+      color="success"
+    />
+  </div>
   <div
     id="table-data"
   >
@@ -190,7 +199,7 @@ onMounted(() => {
                     type="text"
                     label="Nouveau nom"
                   />
-                  <v-btn @click="patchDocument(value[0],payloadDocument,true),menuEditFolder[index]=false">
+                  <v-btn @click="patchDocument(value[0],payloadDocument,true,value[1].path),menuEditFolder[index]=false">
                     Modifier
                   </v-btn>
                 </v-card>
@@ -295,7 +304,7 @@ onMounted(() => {
                     }"
                     v-bind="props"
                     class="v-icn-table"
-                    @click="getRevisions(dataUrl,value[0])"
+                    @click="getRevisions(value[0])"
                   >
                     mdi-history
                   </v-icon>
@@ -347,6 +356,14 @@ onMounted(() => {
   </div>
 </template>
 <style>
+.progress-bar{
+  opacity:0.7;
+  right:20px;
+}
+.wrapper-bar{
+  height:20px;
+  margin-right:20px
+}
 .v-icn-table:hover {
   background-color: rgb(220, 220, 220);
 }

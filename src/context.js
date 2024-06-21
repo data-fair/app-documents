@@ -2,7 +2,10 @@ import { useFetch } from '@vueuse/core'
 import { computed, ref } from 'vue'
 import { errorMessage, displayError, dataset } from './assets/request'
 import useAppInfo from '@/composables/useAppInfo'
+import { WSClient } from './composables/useServerInfo'
 const { dataUrl } = useAppInfo()
+export const websock = new WSClient('datasets/ccyum-yt3t8o9ywu4iggjlbz/journal')
+websock.configureWS()
 export const path = ref('/')
 const qs = computed(() => encodeURIComponent('path:"' + path.value + '"'))
 const urlget = computed(() => `${dataUrl}/lines?qs=${qs.value}&q_fields=path&q_mode=complete`)
@@ -61,4 +64,9 @@ const params = {
     return ctx
   }
 }
-export const { isFetching, data, execute } = useFetch(urlget, params)
+export const { isFetching, data, execute, onFetchError } = useFetch(urlget, params)
+
+onFetchError((e) => {
+  errorMessage.value = e + ' : impossible de récupérer les dossiers'
+  displayError.value = true
+})

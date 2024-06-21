@@ -2,12 +2,9 @@
 import { ref } from 'vue'
 import { postDocument } from '../assets/request.js'
 import useAppInfo from '@/composables/useAppInfo.js'
-
 const { payloadDocument } = useAppInfo()
-
 const menuDoc = ref(false)
 const menuFolder = ref(false)
-
 </script>
 <template>
   <div
