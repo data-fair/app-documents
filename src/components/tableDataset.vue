@@ -1,5 +1,5 @@
 <script setup>
-import { deleteFile, deleteFolder, hmDisplay, patchDocument, downloadFile, getRevisions, pathGED, loading, percentage } from '../assets/request.js'
+import { deleteFile, deleteFolder, hmDisplay, patchDocument, downloadFile, getRevisions, pathGED, loading, percentage, loadingIndex } from '../assets/request.js'
 import { ref, onMounted } from 'vue'
 import { changerAffichage, displaySize } from '../assets/content.js'
 import reactiveSearchParams from '@data-fair/lib/vue/reactive-search-params-global.js'
@@ -27,24 +27,46 @@ onMounted(() => {
 })
 </script>
 <template>
-  <div class="wrapper-bar">
+  <div
+    class="pt-5 mr-10"
+    :style="{
+      height:'40px'
+    }"
+  >
     <v-progress-linear
       v-show="loading"
       v-model="percentage"
-      height="10"
+      height="15"
       class="progress-bar"
       color="success"
-    />
+    >
+      Envoi des fichiers
+    </v-progress-linear>
+    <v-progress-linear
+      v-show="loadingIndex"
+      class="progress-bar"
+      height="15"
+      color="success"
+      indeterminate
+    >
+      Traitement en cours
+    </v-progress-linear>
   </div>
   <div
-    id="table-data"
+    class="px-2"
+    :style="{
+      borderStyle: 'solid',
+      borderColor: '#1e88e5',
+      borderRadius: '0.5em'
+    }"
   >
     <v-banner
-      class="banner-path"
-      line="one"
+      class="py-1"
+
+      lines="one"
     >
       <v-icon
-        class="v-icn-table"
+        class="tbh pa-5"
         @click="changerAffichage('/')"
       >
         mdi-home
@@ -56,7 +78,7 @@ onMounted(() => {
           :style="{display: 'inline'}"
         >
           <v-btn
-            class="v-btn-path"
+            class="px-1 ml-1"
             density="default"
             :ripple="false"
             elevation="0"
@@ -69,17 +91,19 @@ onMounted(() => {
       <template
         #actions
       >
-        <div class="banner-btn">
-          <CreateDoc />
-        </div>
+        <CreateDoc />
       </template>
     </v-banner>
   </div>
-  <div class="table-container">
+  <div
+    :style="{
+      height:'100%'
+    }"
+  >
     <v-table
       density="compact"
       fixed-header
-      class="table-v-data"
+      class="w-100"
     >
       <thead>
         <tr>
@@ -89,14 +113,13 @@ onMounted(() => {
           >
             <span
               v-if="p==='Nom'"
-              class="nom-display"
+              class="ml-12"
             >{{ p }}</span>
             <span v-else>{{ p }}</span>
           </th>
           <th>Actions </th>
         </tr>
       </thead>
-
       <tbody>
         <tr
           v-for="(value,index) in data"
@@ -108,235 +131,231 @@ onMounted(() => {
           >
             <span v-if="value[1].attachmentPath===undefined&&p==='nom'">
               <v-icon
-                class="v-icn-table"
+                class="tbh pa-5"
                 @click="changerAffichage(value[1].nom)"
               >
                 mdi-folder
               </v-icon><div
-                class="text-nav"
+                class="d-inline tbh py-3 px-2"
+                :style="{
+                  cursor: 'pointer'
+                }"
                 @click="changerAffichage(value[1].nom)"
               >{{ value[1][p] }}</div></span>
             <span v-else-if="p==='nom'">
-              <v-icon class="v-btn-table-file">
+              <v-icon class="ma-2">
                 mdi-file-outline
               </v-icon>
               <div
-                :style="{display: 'inline',
-                         marginLeft : '10px'
-                }"
+                class="d-inline ml-2"
               >{{ value[1][p] }}</div>
             </span>
             <span v-else-if="p==='taille' && value[1].attachmentPath!==undefined">{{ displaySize(value[1][p]) }}</span>
             <span v-else>{{ value[1][p] }}</span>
           </td>
           <td>
-            <div
+            <v-menu
               v-if="value[1].attachmentPath!==undefined"
-              id="edit-document"
-              class="menu-document"
+              v-model="menuEditDoc[index]"
+              class="d-inline"
+              :close-on-content-click="false"
+              location="left"
             >
-              <v-menu
-                v-model="menuEditDoc[index]"
-                :close-on-content-click="false"
-                location="left"
-              >
-                <template #activator="{ props }">
-                  <v-icon
+              <template #activator="{ props }">
+                <v-icon
 
-                    v-tooltip="{
-                      text: 'Editer le document',
-                      location: 'right',
-                      openDelay:'500'
-                    }"
-                    v-bind="props"
-                    class="v-icn-table"
-                  >
-                    mdi-pencil
-                  </v-icon>
-                </template>
-                <v-card class="menu-card">
-                  <v-text-field
-                    v-model="payloadDocument.nom"
-                    type="text"
-                    label="Nouveau nom (facultatif)"
-                  />
-                  <v-file-input
-                    v-model="payloadDocument.file"
-                    label="File input"
-                  /><v-btn @click="patchDocument(value[0],payloadDocument,false), menuEditDoc[index]=false">
-                    Modifier
-                  </v-btn>
-                </v-card>
-              </v-menu>
-            </div>
-            <div
+                  v-tooltip="{
+                    text: 'Editer le document',
+                    location: 'right',
+                    openDelay:'500'
+                  }"
+                  v-bind="props"
+                  class="tbh pa-5"
+                >
+                  mdi-pencil
+                </v-icon>
+              </template>
+              <v-card
+                class="pa-3"
+                :style="{width: '20em'}"
+              >
+                <v-text-field
+                  v-model="payloadDocument.nom"
+                  type="text"
+                  label="Nouveau nom (facultatif)"
+                />
+                <v-file-input
+                  v-model="payloadDocument.file"
+                  label="File input"
+                /><v-btn @click="patchDocument(value[0],payloadDocument,false), menuEditDoc[index]=false">
+                  Modifier
+                </v-btn>
+              </v-card>
+            </v-menu>
+            <v-menu
               v-if="value[1].attachmentPath===undefined"
-              id="edit-folder"
-              class="menu-document"
+              v-model="menuEditFolder[index]"
+              class="d-inline"
+              :close-on-content-click="false"
+              location="left"
             >
-              <v-menu
-                v-model="menuEditFolder[index]"
-                :close-on-content-click="false"
-                location="left"
-              >
-                <template #activator="{ props }">
-                  <v-icon
+              <template #activator="{ props }">
+                <v-icon
 
-                    v-tooltip="{
-                      text: 'Editer le dossier',
-                      location: 'right',
-                      openDelay:'500'
-                    }"
-                    v-bind="props"
-                    class="v-icn-table"
-                  >
-                    mdi-pencil
-                  </v-icon>
-                </template>
-                <v-card class="menu-card">
-                  <v-text-field
-                    v-model="payloadDocument.nom"
-                    type="text"
-                    label="Nouveau nom"
-                  />
-                  <v-btn @click="patchDocument(value[0],payloadDocument,true,value[1].path),menuEditFolder[index]=false">
-                    Modifier
-                  </v-btn>
-                </v-card>
-              </v-menu>
-            </div>
-
-            <div
-              id="delete-documet"
-              class="menu-document"
-            >
-              <v-menu
-                v-model="menuDelete[index]"
-                :close-on-content-click="false"
-                location="start"
-              >
-                <template #activator="{ props }">
-                  <v-icon
-                    v-if="value[1].attachmentPath!==undefined"
-                    v-tooltip="{
-                      text: 'Supprimer le fichier',
-                      location: 'right',
-                      openDelay:'500'
-                    }"
-                    v-bind="props"
-                    class="v-icn-table v-icn-delete"
-                    @click="dossier=false"
-                  >
-                    mdi-delete
-                  </v-icon>
-                  <v-icon
-                    v-else
-                    v-tooltip="{
-                      text: 'Supprimer le dossier',
-                      location: 'right',
-                      openDelay:'500'
-                    }"
-                    v-bind="props"
-                    class="v-icn-table v-icn-delete"
-                    @click="dossier=true"
-                  >
-                    mdi-delete
-                  </v-icon>
-                </template>
-                <v-card
-                  v-if="dossier"
-                  class="menu-card"
+                  v-tooltip="{
+                    text: 'Editer le dossier',
+                    location: 'right',
+                    openDelay:'500'
+                  }"
+                  v-bind="props"
+                  class="tbh pa-5"
                 >
-                  <div class="text-history">
-                    Supprimer tout le contenu du dossier ?
-                  </div>
-                  <v-btn
-                    class="btn-valid-delete"
-                    @click="deleteFolder(value[1]['path'],value[1]['nom'], value[0]),menuDelete[index]=false"
-                  >
-                    Oui
-                  </v-btn><v-btn
-                    class="btn-valid-delete"
-                    @click="menuDelete[index]=false"
-                  >
-                    Non
-                  </v-btn>
-                </v-card>
-                <v-card
+                  mdi-pencil
+                </v-icon>
+              </template>
+              <v-card
+                class="pa-3"
+                :style="{width: '20em'}"
+              >
+                <v-text-field
+                  v-model="payloadDocument.nom"
+                  type="text"
+                  label="Nouveau nom"
+                />
+                <v-btn @click="patchDocument(value[0],payloadDocument,true,value[1].path),menuEditFolder[index]=false">
+                  Modifier
+                </v-btn>
+              </v-card>
+            </v-menu>
+            <v-menu
+              v-model="menuDelete[index]"
+              :close-on-content-click="false"
+              class="d-inline"
+              location="start"
+            >
+              <template #activator="{ props }">
+                <v-icon
+                  v-if="value[1].attachmentPath!==undefined"
+                  v-tooltip="{
+                    text: 'Supprimer le fichier',
+                    location: 'right',
+                    openDelay:'500'
+                  }"
+                  v-bind="props"
+                  class="tbh pa-5"
+                  color="red"
+                  @click="dossier=false"
+                >
+                  mdi-delete
+                </v-icon>
+                <v-icon
                   v-else
-                  class="menu-card"
+                  v-tooltip="{
+                    text: 'Supprimer le dossier',
+                    location: 'right',
+                    openDelay:'500'
+                  }"
+                  v-bind="props"
+                  class="tbh pa-5 my-1"
+                  color="red"
+                  @click="dossier=true"
                 >
-                  <div class="text-history">
-                    Supprimer le fichier ?
-                  </div>
-                  <v-btn
-                    class="btn-valid-delete"
-                    @click="deleteFile(value[0]),menuDelete[index]=false"
-                  >
-                    Oui
-                  </v-btn><v-btn
-                    class="btn-valid-delete"
-                    @click="menuDelete[index]=false"
-                  >
-                    Non
-                  </v-btn>
-                </v-card>
-              </v-menu>
-            </div>
-            <div
-              v-if="value[1].attachmentPath!==undefined"
-              id="menu-history"
-              class="menu-document"
-            >
-              <v-menu
-
-                v-model="menuHistory[index]"
-                :close-on-content-click="false"
-                location="start"
+                  mdi-delete
+                </v-icon>
+              </template>
+              <v-card
+                v-if="dossier"
+                class="pa-3"
+                :style="{width: '20em'}"
               >
-                <template #activator="{ props }">
-                  <v-icon
+                <div class="mb-3 text-h6">
+                  Supprimer tout le contenu du dossier ?
+                </div>
+                <v-btn
+                  class="ml-15"
+                  @click="deleteFolder(value[1]['path'],value[1]['nom'], value[0]),menuDelete[index]=false"
+                >
+                  Oui
+                </v-btn><v-btn
+                  class="ml-10"
+                  @click="menuDelete[index]=false"
+                >
+                  Non
+                </v-btn>
+              </v-card>
+              <v-card
+                v-else
+                class="pa-3"
+                :style="{width: '20em'}"
+              >
+                <div class="mb-3 text-h6">
+                  Supprimer le fichier ?
+                </div>
+                <v-btn
+                  class="ml-15"
+                  @click="deleteFile(value[0]),menuDelete[index]=false"
+                >
+                  Oui
+                </v-btn><v-btn
+                  class="ml-10"
+                  @click="menuDelete[index]=false"
+                >
+                  Non
+                </v-btn>
+              </v-card>
+            </v-menu>
+            <v-menu
+              v-if="value[1].attachmentPath!==undefined"
+              v-model="menuHistory[index]"
+              class="d-inline"
+              :close-on-content-click="false"
+              location="start"
+            >
+              <template #activator="{ props }">
+                <v-icon
 
-                    v-tooltip="{
-                      text: 'Voir l\'historique des modifications',
-                      location: 'right',
-                      openDelay:'500'
-                    }"
-                    v-bind="props"
-                    class="v-icn-table"
-                    @click="getRevisions(value[0])"
-                  >
-                    mdi-history
+                  v-tooltip="{
+                    text: 'Voir l\'historique des modifications',
+                    location: 'right',
+                    openDelay:'500'
+                  }"
+                  v-bind="props"
+                  class="tbh pa-5"
+                  @click="getRevisions(value[0])"
+                >
+                  mdi-history
+                </v-icon>
+              </template>
+              <v-card
+                class="pa-3"
+                :style="{width: '20em'}"
+              >
+                <div class="text-h6 mb-1">
+                  Historique des modifications :
+                </div>
+                <div
+                  v-for="(o,i) in hmDisplay"
+                  :key="o"
+                  class="mb-2"
+                >
+                  <v-icon v-if="i===0">
+                    mdi-file-plus-outline
                   </v-icon>
-                </template>
-                <v-card class="history-card">
-                  <div class="text-history">
-                    Historique des modifications :
-                  </div>
-                  <div
-                    v-for="(o,i) in hmDisplay"
-                    :key="o"
-                    class="text-date"
+                  <v-icon v-else>
+                    mdi-file-document-edit-outline
+                  </v-icon>
+                  {{ o._updatedAt }}
+                  <v-icon
+                    v-if="i!==hmDisplay.length-1"
+                    color="light-green-accent-2"
+                    @click="downloadFile(o.attachmentPath,o.nom)"
                   >
-                    <v-icon v-if="i===0">
-                      mdi-file-plus-outline
-                    </v-icon>
-                    <v-icon v-else>
-                      mdi-file-document-edit-outline
-                    </v-icon>
-                    {{ o._updatedAt }}
-                    <v-icon
-                      v-if="i!==hmDisplay.length-1"
-                      class="icn-download"
-                      @click="downloadFile(o.attachmentPath,o.nom)"
-                    >
-                      mdi-download-circle-outline
-                    </v-icon>
-                    <span v-else>: Version actuelle</span>
-                  </div>
-                </v-card>
-              </v-menu>
-            </div>
+                    mdi-download-circle-outline
+                  </v-icon>
+                  <span v-else>: Version actuelle</span>
+                </div>
+              </v-card>
+            </v-menu>
             <v-icon
               v-if="value[1].attachmentPath!==undefined"
               v-tooltip="{
@@ -344,7 +363,7 @@ onMounted(() => {
                 location: 'right',
                 openDelay:'500'
               }"
-              class="v-icn-table"
+              class="tbh pa-5 my-1"
               @click="downloadFile(value[1].attachmentPath,value[1].nom)"
             >
               mdi-download
@@ -356,99 +375,7 @@ onMounted(() => {
   </div>
 </template>
 <style>
-.progress-bar{
-  opacity:0.7;
-  right:20px;
-}
-.wrapper-bar{
-  height:20px;
-  margin-right:20px
-}
-.v-icn-table:hover {
+.tbh:hover {
   background-color: rgb(220, 220, 220);
-}
-.v-icn-table, .v-btn-table-file{
-  margin: 2px;
-  padding: 20px
-
-}
-
-.v-icn-delete{
-  color: rgb(254, 69, 69)
-}
-a{
-  text-decoration: none;
-  color: #1e88e5;
-}
-.v-btn-path{
-  padding-right:4px !important;
-  padding-left:4px !important;
-  margin-left:2px
-  }
-
-.history-card{
-  width:25em !important;
-  padding: 20px !important;
-}
-.btn-valid-delete{
-  margin-left: 5em;
-}
-
-.nom-display{
-  margin-left:3.3em
-}
-
-.text-history{
-  font-size: 1.5em;
-  margin-bottom:0.8em;
-}
-.text-date{
-  margin-bottom: 6px;
-}
-.banner-path{
-  border: solid #1e88e5 !important;
-  border-radius: 0.5em !important;
-  padding-top:0.3em !important;
-  padding-bottom:0.3em !important;
-  display: flex !important;
-  justify-content: space-between;
-  align-items: center
-}
-.icn-download{
-  color: #4caf50;
-}
-.banner-btn{
-  display: flex;
-}
-.v-banner-actions{
-  margin:0px !important;
-}
-.v-banner {
-    flex: 0 0 auto;
-    padding: 10px;
-    width: 100%;
-    box-sizing: border-box;
-}
-.table-container {
-    display : flex !important;
-    flex: 1 !important;
-    overflow: auto !important;
-    width: 100%;
-    box-sizing: border-box;
-}
-.table-v-data{
-  width: 100%;
-}
-
-.text-nav{
-  display: inline;
-  padding-top: 10px;
-  padding-bottom: 10px;
-  padding-right:10px;
-  padding-left:10px;
-}
-.text-nav:hover{
-  background-color: rgb(220, 220, 220);
-  cursor:pointer;
 }
 </style>

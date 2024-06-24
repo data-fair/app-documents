@@ -2,11 +2,9 @@ import { useFetch } from '@vueuse/core'
 import { computed, ref } from 'vue'
 import { errorMessage, displayError, dataset } from './assets/request'
 import useAppInfo from '@/composables/useAppInfo'
-import { WSClient } from './composables/useServerInfo'
 const { dataUrl } = useAppInfo()
-export const websock = new WSClient('datasets/ccyum-yt3t8o9ywu4iggjlbz/journal')
-websock.configureWS()
 export const path = ref('/')
+
 const qs = computed(() => encodeURIComponent('path:"' + path.value + '"'))
 const urlget = computed(() => `${dataUrl}/lines?qs=${qs.value}&q_fields=path&q_mode=complete`)
 const params = {
@@ -30,19 +28,18 @@ const params = {
       lines.set(data._id, obj)
     }
     // 2nd step -> get all existing folder of this repository ie search all file with path=path/other_name/ and store this name into folders set
-    const url2 = `${dataUrl}/lines?q=${path.value}*&q_fields=path&q_mode=complete`
-    const str = `^${path.value}[^\\/]\\w*/$`
-    const rex = new RegExp(str)
+    const tmp = path.value.split('/')
+    const p = tmp.join('\\/')
+    const url2 = `${dataUrl}/lines?qs=(path:${p}*)&q_mode=complete`
     const folders = new Set()
     try {
       const request = await fetch(url2, params)
       if (request.status === 200) {
         const reponse = await request.json()
         reponse.results.forEach((value) => {
-          const t = value.path.match(rex)
-          if (t !== null) {
-            const temp = t[0].split('/')
-            const folderName = temp[temp.length - 2]
+          const t = value.path.split('/')
+          if (t[tmp.length - 1] !== '') {
+            const folderName = t[tmp.length - 1]
             folders.add(folderName)
           }
         })

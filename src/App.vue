@@ -5,14 +5,23 @@ import { displayError, errorMessage } from './assets/request.js'
 
 </script>
 <template>
-  <div class="container">
+  <div
+    class="d-flex flex-column w-100"
+    :style="{
+      height:'100vh',
+    }"
+  >
     <div
-      class="table-data-path"
+      :style="{
+        flex:'1'
+      }"
     >
       <table-dataset />
     </div>
     <div
-      class="drop-file"
+      :style="{
+        flex: '0 0 15%'
+      }"
     >
       <drop-file />
     </div>
@@ -28,28 +37,3 @@ import { displayError, errorMessage } from './assets/request.js'
     </v-snackbar>
   </div>
 </template>
-<style>
-.container{
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  width: 100%;
-  overflow : hidden;
-}
-.drop-file {
-    flex: 0 0 15%;
-    width: 100%;
-    box-sizing: border-box;
-}
-.table-data-path{
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  overflow: hidden;
-  box-sizing: border-box;
-}
-.v-snackbar--variant-elevated{
-  background: rgb(255, 74, 74) !important;
-}
-</style>

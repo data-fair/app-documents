@@ -22,11 +22,7 @@ export async function changerAffichage (nomfolder) {
 }
 export function displaySize (n) {
   let res
-  if (n / 1000000000 > 1) { // display Go
-    res = n / 1000000000
-    res = res.toFixed(1)
-    return res + ' Go'
-  } else if (n / 1000000 > 1) { // display Mo
+  if (n / 1000000 > 1) { // display Mo
     res = n / 1000000
     res = res.toFixed(1)
     return res + ' Mo'
