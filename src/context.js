@@ -1,17 +1,20 @@
 import { useFetch } from '@vueuse/core'
 import { computed, ref } from 'vue'
-import { errorMessage, displayError, dataset } from './assets/request'
+import { errorMessage, displayError } from './assets/util.js'
 import useAppInfo from '@/composables/useAppInfo'
 const { dataUrl } = useAppInfo()
-export const path = ref('/')
-
+export const path = ref('/') // current path, default is /
+export const data = ref(new Map()) // represent the data of the current path, it's used to see if we are not uploading or updating a file we already have
 const qs = computed(() => encodeURIComponent('path:"' + path.value + '"'))
-const urlget = computed(() => `${dataUrl}/lines?qs=${qs.value}&q_fields=path&q_mode=complete`)
+const urlget = computed(() => `${dataUrl}/lines?qs=${qs.value}&q_fields=path&q_mode=complete`) // refresh page if this url changes (if path change)
+// we call afterFetch method to intercept response and do an other request to find all folders to display
+// we mix both results into the response and we update data
 const params = {
   refetch: true,
   async afterFetch (ctx) {
     const array = JSON.parse(ctx.data).results
     const lines = new Map()
+    data.value.clear()
     let i
     for (i in array) {
       const data = array[i]
@@ -22,6 +25,7 @@ const params = {
         type_mime: data.type_mime,
         path: data.path,
         datecreation: data.datecreation,
+        datemodification: data.datemodification,
         nbrevisions: data.nbrevisions,
         _id: data._id
       }
@@ -55,15 +59,14 @@ const params = {
       errorMessage.value = e.response.status + ' : impossible de récupérer les dossiers'
       displayError.value = true
     }
-    console.log('exec')
-    dataset.value = lines
+    data.value = lines
     ctx.data = lines
     return ctx
   }
 }
-export const { isFetching, data, execute, onFetchError } = useFetch(urlget, params)
+export const { isFetching, execute, onFetchError } = useFetch(urlget, params)
 
 onFetchError((e) => {
-  errorMessage.value = e + ' : impossible de récupérer les dossiers'
+  errorMessage.value = e
   displayError.value = true
 })

@@ -1,10 +1,9 @@
 <script setup>
 import { ref } from 'vue'
-import { postDocument } from '../assets/request.js'
-import useAppInfo from '@/composables/useAppInfo.js'
-const { payloadDocument } = useAppInfo()
+import { postDocument, payloadDocument } from '../assets/util.js'
 const menuDoc = ref(false)
 const menuFolder = ref(false)
+
 </script>
 <template>
   <v-menu

@@ -1,39 +1,51 @@
 <script setup>
 import tableDataset from './components/tableDataset.vue'
 import dropFile from './components/dropFile.vue'
-import { displayError, errorMessage } from './assets/request.js'
-
+import { displayError, errorMessage } from './assets/util.js'
+import useAppInfo from './composables/useAppInfo'
+const { screenSize } = useAppInfo()
 </script>
 <template>
-  <div
-    class="d-flex flex-column w-100"
+  <v-container
+    fluid
+    class="pa-0"
     :style="{
-      height:'100vh',
+      height : `${screenSize}px`
     }"
   >
-    <div
-      :style="{
-        flex:'1'
-      }"
-    >
-      <table-dataset />
+    <v-row class="ma-0 pa-0">
+      <v-col class="ma-0 pa-0">
+        <div
+          :style="{display: 'flex',
+                   flexDirection : 'column',
+                   height : `${Math.max(screenSize*0.80,screenSize-120)}px`
+          }"
+        >
+          <table-dataset />
+        </div>
+      </v-col>
+    </v-row>
+    <v-row class="ma-0 pa-0">
+      <v-col class="ma-0 pa-0">
+        <div
+          :style="{display: 'flex',
+                   justifyContent : 'center',
+                   alignItems : 'center',
+                   height : `${Math.min(screenSize*0.20,120)}px`
+          }"
+        >
+          <drop-file />
+        </div>
+      </v-col>
+    </v-row>
+  </v-container>
+  <v-snackbar
+    v-model="displayError"
+    :timeout="'5000'"
+    color="red"
+  >
+    <div>
+      {{ errorMessage }}
     </div>
-    <div
-      :style="{
-        flex: '0 0 15%'
-      }"
-    >
-      <drop-file />
-    </div>
-  </div>
-  <div>
-    <v-snackbar
-      v-model="displayError"
-      :timeout="'5000'"
-    >
-      <div>
-        {{ errorMessage }}
-      </div>
-    </v-snackbar>
-  </div>
+  </v-snackbar>
 </template>

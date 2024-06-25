@@ -24,7 +24,6 @@ class WSClient {
         })
       })
       ws.addEventListener('close', (event) => {
-        this._channels = []
         console.log(`WebSocket connection closed. Code: ${event.code}, Reason: ${event.reason}`)
       })
     }
