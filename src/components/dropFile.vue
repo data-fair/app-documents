@@ -14,15 +14,11 @@ function sendFiles (e) {
 </script>
 <template>
   <div
-    class="text-center border-dotted mt-3 mb-3"
+    class="text-center border-dotted mt-3 mb-3 d-flex flex-column align-center justify-center"
     :style="{borderColor: '#1e88e5',
              width : '85%',
              height:'85%',
-             display: 'flex',
-             boxSizing : 'border-box',
-             flexDirection: 'column',
-             justifyContent : 'center',
-             alignItems : 'center',
+             boxSizing : 'border-box'
     }"
     @drop="onDrop"
     @dragover="prevDefault"

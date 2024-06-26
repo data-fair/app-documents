@@ -88,7 +88,7 @@ export async function postDocument (payload) {
       if (request.status === 201) {
         loading.value = false
         loadingIndex.value = true
-        await websock.waitForJournal(datasetId, 'finalize-end')
+        await websock.waitForJournal(datasetId)
         execute()
         loadingIndex.value = false
       }
@@ -116,7 +116,7 @@ export async function postDocument (payload) {
       const request = await fetch(url, params)
       if (request.status === 201) {
         loadingIndex.value = true
-        await websock.waitForJournal(datasetId, 'finalize-end')
+        await websock.waitForJournal(datasetId)
         execute()
         loadingIndex.value = false
       }
@@ -187,11 +187,12 @@ export async function postFilesDD (filesInput) {
       let request
       try {
         data.value.forEach((value, key) => {
-          console.log(value)
-          const tmp = value.attachmentPath.split('/').pop()
-          const tmp2 = new Date(file.lastModified)
-          if (tmp === file.name && tmp2.toISOString() === value.datemodification) {
-            throw new Error('Erreur : le fichier est deja présent : ' + value.nom)
+          if (value.attachmentPath !== undefined) {
+            const tmp = value.attachmentPath.split('/').pop()
+            const tmp2 = new Date(file.lastModified)
+            if (tmp === file.name && tmp2.toISOString() === value.datemodification) {
+              throw new Error('Erreur : le fichier est deja présent : ' + value.nom)
+            }
           }
         })
         request = await axios(params)
@@ -199,6 +200,7 @@ export async function postFilesDD (filesInput) {
           loading.value = false
         }
       } catch (e) {
+        console.log(e)
         errorMessage.value = e.message || e.response.status + ' : ' + e.response.data
         displayError.value = true
         loading.value = false
@@ -209,11 +211,14 @@ export async function postFilesDD (filesInput) {
     }
   })
   try {
-    await websock.waitForJournal(datasetId, 'finalize-end')
+    loadingIndex.value = true
+    await websock.waitForJournal(datasetId)
+    loadingIndex.value = false
     execute()
   } catch (e) {
     errorMessage.value = e.message
     displayError.value = true
+    loadingIndex.value = false
   }
 }
 // method : get all the versions of a file, sorted by modification date
@@ -223,10 +228,10 @@ export async function getRevisions (ligneId) {
     const request = await fetch(url)
     if (request.status === 200) {
       const reponse = await request.json()
-      hmDisplay.value = reponse.results.reverse()
+      hmDisplay.value = reponse.results
       hmDisplay.value.forEach((value) => {
-        const date = new Date(value.datemodification)
-        value._updatedAt = date.toLocaleString()
+        const date = new Date(value.datemodification) // just display a better date format
+        value.datemodification = date.toLocaleString()
       })
     }
   } catch (e) {
@@ -252,8 +257,8 @@ export async function deleteFile (ligneId) {
     const request = await fetch(url, params)
     if (request.ok) {
       loadingIndex.value = true
-      await websock.waitForJournal(datasetId, 'finalize-end')
-      execute()
+      await websock.waitForJournal(datasetId)
+      await execute()
       loadingIndex.value = false
     }
   } catch (e) {
@@ -335,7 +340,7 @@ export async function patchDocument (id, payload, folder, chemin) {
         if (request.status === 200) {
           loading.value = false
           loadingIndex.value = true
-          await websock.waitForJournal(datasetId, 'finalize-end')
+          await websock.waitForJournal(datasetId)
           execute()
           loadingIndex.value = false
         }
@@ -356,7 +361,7 @@ export async function patchDocument (id, payload, folder, chemin) {
         const request = await fetch(url, params)
         if (request.status === 200) {
           loadingIndex.value = true
-          await websock.waitForJournal(datasetId, 'finalize-end')
+          await websock.waitForJournal(datasetId)
           execute()
           loadingIndex.value = false
         }
@@ -409,8 +414,8 @@ export async function patchDocument (id, payload, folder, chemin) {
       displayError.value = true
     }
     try {
-      loadingIndex.value = false
-      await websock.waitForJournal(datasetId, 'finalize-end')
+      loadingIndex.value = true
+      await websock.waitForJournal(datasetId)
       execute()
       loadingIndex.value = false
     } catch (e) {

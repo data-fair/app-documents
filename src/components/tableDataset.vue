@@ -375,15 +375,15 @@ function displaySize (n) {
                 :key="o"
                 class="mb-2"
               >
-                <v-icon v-if="i===0">
+                <v-icon v-if="i===hmDisplay.length-1">
                   mdi-file-plus-outline
                 </v-icon>
                 <v-icon v-else>
                   mdi-file-document-edit-outline
                 </v-icon>
-                {{ o._updatedAt }} :
+                {{ o.datemodification }} :
                 <v-icon
-                  v-if="i!==hmDisplay.length-1"
+                  v-if="i!==0"
                   color="light-green"
                   @click="downloadFile(o.attachmentPath,o.nom)"
                 >

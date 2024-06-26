@@ -51,7 +51,8 @@ const params = {
       folders.forEach((value) => {
         const obj = {
           nom: value,
-          path: path.value
+          path: path.value,
+          attachmentPath: undefined
         }
         lines.set(value, obj)
       })
@@ -64,9 +65,12 @@ const params = {
     return ctx
   }
 }
-export const { isFetching, execute, onFetchError } = useFetch(urlget, params)
+export const { execute, onFetchError } = useFetch(urlget, params)
 
 onFetchError((e) => {
-  errorMessage.value = e
-  displayError.value = true
+  // ignore error message NS_BINDING_ABORT throw when we this method is called 2 times in a row and the first call wasn't finished
+  if (!(e.message === 'The operation was aborted. ')) {
+    errorMessage.value = e
+    displayError.value = true
+  }
 })
