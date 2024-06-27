@@ -1,9 +1,12 @@
 <script setup>
-import { ref } from 'vue'
-import { postDocument, payloadDocument } from '../assets/util.js'
+import { ref, reactive } from 'vue'
+import { postDocument } from '../assets/util.js'
 const menuDoc = ref(false)
 const menuFolder = ref(false)
-
+const payloadDocument = reactive({
+  nom: '',
+  file: ''
+})
 </script>
 <template>
   <v-menu

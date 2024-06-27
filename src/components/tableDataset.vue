@@ -1,16 +1,20 @@
 <script setup>
-import { deleteFile, deleteFolder, hmDisplay, patchDocument, downloadFile, getRevisions, loading, percentage, loadingIndex, payloadDocument } from '../assets/util.js'
-import { ref, onMounted } from 'vue'
+import { deleteFile, deleteFolder, hmDisplay, patchDocument, downloadFile, getRevisions, loading, percentage, loadingIndex } from '../assets/util.js'
+import { ref, onMounted, reactive } from 'vue'
 import reactiveSearchParams from '@data-fair/lib/vue/reactive-search-params-global.js'
 import CreateDoc from './createDoc.vue'
 import { data, path, pathGED } from '@/context.js'
-const properties = ['nom', 'taille', 'nbrevisions']
-const propertiesDisplay = ['Nom', 'Taille', 'Nombre de révisions']
+const properties = ['nom', 'taille', 'nbrevisions', 'path']
+const propertiesDisplay = ['Nom', 'Taille', 'Nombre de révisions', 'path']
 const menuHistory = ref([]) // following refs are used to display menu after clicking on button on a line of the table
 const menuEditDoc = ref([])
 const menuEditFolder = ref([])
 const menuDelete = ref([])
 const dossier = ref(false)
+const payloadDocument = reactive({
+  nom: '',
+  file: ''
+})
 const fileFormat = new Map([['application/json', 'mdi-code-json'], ['', 'mdi-file-outline'],
   ['image/png', 'mdi-image-outline'],
   ['application/vnd.ms-excel', 'mdi-file-table-outline'],
@@ -172,17 +176,32 @@ function displaySize (n) {
           />
           <span v-if="value[1].attachmentPath===undefined&&p==='nom'">
             <v-icon
+              v-if="value[1].load"
+              class="pa-5"
+              icon="mdi-folder"
+            />
+            <v-icon
+              v-else
               class="tbh pa-5"
               @click="navigationPath(value[1].nom)"
             >
               mdi-folder
-            </v-icon><div
+            </v-icon>
+            <div
+              v-if="value[1].load"
+              class="d-inline py-3 px-2"
+            >
+              {{ value[1][p] }}
+            </div>
+            <div
+              v-else
               class="d-inline tbh py-3 px-2"
               :style="{
                 cursor: 'pointer'
               }"
               @click="navigationPath(value[1].nom)"
-            >{{ value[1][p] }}</div></span>
+            >{{ value[1][p] }}</div>
+          </span>
           <span v-else-if="p==='nom'">
             <v-icon
               class="ma-2"
@@ -380,13 +399,13 @@ function displaySize (n) {
                 :key="o"
                 class="mb-2"
               >
-                <v-icon v-if="i===hmDisplay.size-1">
+                <v-icon v-if="i===hmDisplay.length-1">
                   mdi-file-plus-outline
                 </v-icon>
                 <v-icon v-else>
                   mdi-file-document-edit-outline
                 </v-icon>
-                {{ o }} :
+                {{ o.datemodification }} :
                 <v-icon
                   v-if="i!==0"
                   color="light-green"

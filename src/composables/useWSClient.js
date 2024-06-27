@@ -55,7 +55,7 @@ class WSClient {
       return e.type === 'subscribe-confirm' || e.type === 'error'
     })
     if (event.type === 'error') throw new Error('Erreur subscribe')
-    this._channels.push(channel)
+    if (event.type === 'subscribe-confirm') this._channels.push(channel)
   }
 
   async waitForJournal (datasetId) {

@@ -1,4 +1,4 @@
-import { ref, reactive, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { saveAs } from 'file-saver'
 import axios from 'axios'
 import useAppInfo from '@/composables/useAppInfo'
@@ -6,16 +6,12 @@ import useWSClient from '@/composables/useWSClient.js'
 import { execute, path, data, pathGED } from '../context.js'
 const { dataUrl, datasetId, wsUrl } = useAppInfo()
 const websock = useWSClient(wsUrl) // handle and listen the websocket to have info when data-fair finished indexing data
-export const hmDisplay = ref(new Set()) // display history of modification of selected file (see revisions)
+export const hmDisplay = ref([]) // display history of modification of selected file (see revisions)
 export const loading = ref(false) // show a progress bar when uploading a file
 export const loadingIndex = ref(false) // show a progress bar when data-fair is indexing the file
 export const percentage = ref(0) // value of the progress bar loading
 export const displayError = ref(false) // display error v-snackbar if error on requests
 export const errorMessage = ref('') // error message to display
-export const payloadDocument = reactive({
-  nom: '',
-  file: ''
-})
 const bufferEvent = ref(0)
 watch(bufferEvent, () => { // control when multiple actions are done in same time, wait for the last one to refresh data
   if (bufferEvent.value === 0) {
@@ -59,8 +55,7 @@ export async function postDocument (payload) {
       data.value.forEach((value, key) => {
         if (value.attachmentPath !== undefined) {
           const tmp = value.attachmentPath.split('/').pop()
-          const tmp2 = new Date(file.lastModified)
-          if (tmp === file.name && tmp2.toISOString() === value.datemodification) {
+          if (tmp === file.name) {
             throw new Error('Erreur : le fichier est deja présent : ' + value.nom)
           }
         }
@@ -137,11 +132,12 @@ export async function postDocument (payload) {
           }
         }
         try {
-          await fetch(url, params).then((response) => {
-            if (response.status !== 404 && response.status !== 204) {
-              throw new Error('Erreur suppression dossier parent')
+          const request = await fetch(url, params)
+          if (!request.ok) {
+            if (request.status === 404) {
+              //
             }
-          })
+          }
         } catch (e) {
           errorMessage.value = e.message
           displayError.value = true
@@ -179,7 +175,17 @@ export async function postFilesDragDrop (filesInput) {
           nom: file.name,
           file
         }
-        postDocument(payload)
+        let post = true
+        data.value.forEach((value, key) => {
+          if (value.attachmentPath !== undefined) {
+            const tmp = value.attachmentPath.split('/').pop()
+            if (tmp === file.name) {
+              post = false
+              patchDocument(key, payload, false)
+            }
+          }
+        })
+        if (post) postDocument(payload)
       }
     })
     await Promise.all(promise)
@@ -192,12 +198,17 @@ export async function getRevisions (ligneId) {
   try {
     const request = await fetch(url)
     if (request.status === 200) {
-      hmDisplay.value.clear()
+      hmDisplay.value = []
       const reponse = await request.json()
       const lines = reponse.results
+      const tmp = new Set()
       lines.forEach((value) => {
         const date = new Date(value.datemodification) // just display revisions where content has changed (ignore those were we just have patched the name)
-        hmDisplay.value.add(date.toLocaleString())
+        value.datemodification = date.toLocaleString()
+        if (!tmp.has(value.datemodification)) {
+          tmp.add(value.datemodification)
+          hmDisplay.value.push(value)
+        }
       })
     }
   } catch (e) {
