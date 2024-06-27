@@ -1,9 +1,13 @@
 <script setup>
+import { watch } from 'vue'
 import tableDataset from './components/tableDataset.vue'
 import dropFile from './components/dropFile.vue'
 import { displayError, errorMessage } from './assets/util.js'
 import useAppInfo from './composables/useAppInfo'
-const { screenSize } = useAppInfo()
+const { screenSize, dataset } = useAppInfo()
+watch(dataset, () => {
+  window.location.reload()
+})
 </script>
 <template>
   <v-container

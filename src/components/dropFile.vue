@@ -1,15 +1,15 @@
 <script setup>
-import { postFilesDD } from '../assets/util.js'
+import { postFilesDragDrop } from '../assets/util.js'
 function prevDefault (ev) {
   // Prevent default behavior (Prevent file from being opened)
   ev.preventDefault()
 }
 function onDrop (e) {
   e.preventDefault()
-  postFilesDD(e.dataTransfer.files)
+  postFilesDragDrop(e.dataTransfer.files)
 }
 function sendFiles (e) {
-  postFilesDD(e.target.files)
+  postFilesDragDrop(e.target.files)
 }
 </script>
 <template>

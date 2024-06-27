@@ -3,10 +3,9 @@ import { deleteFile, deleteFolder, hmDisplay, patchDocument, downloadFile, getRe
 import { ref, onMounted } from 'vue'
 import reactiveSearchParams from '@data-fair/lib/vue/reactive-search-params-global.js'
 import CreateDoc from './createDoc.vue'
-import { data, path } from '@/context.js'
+import { data, path, pathGED } from '@/context.js'
 const properties = ['nom', 'taille', 'nbrevisions']
 const propertiesDisplay = ['Nom', 'Taille', 'Nombre de révisions']
-const pathGED = ref([]) // key : id, value : name of the associated folder, it represents the navigation bar upon the data table
 const menuHistory = ref([]) // following refs are used to display menu after clicking on button on a line of the table
 const menuEditDoc = ref([])
 const menuEditFolder = ref([])
@@ -65,7 +64,7 @@ function displaySize (n) {
 </script>
 <template>
   <div
-    class="pt-4 mr-10"
+    class="pt-2"
     :style="{
       height:'40px'
     }"
@@ -74,14 +73,12 @@ function displaySize (n) {
       v-show="loading"
       v-model="percentage"
       height="15"
-      class="progress-bar"
       color="success"
     >
       Envoi des fichiers
     </v-progress-linear>
     <v-progress-linear
       v-show="loadingIndex"
-      class="progress-bar"
       height="15"
       color="success"
       indeterminate
@@ -99,7 +96,6 @@ function displaySize (n) {
   >
     <v-banner
       class="py-1"
-
       lines="one"
     >
       <v-icon
@@ -165,6 +161,15 @@ function displaySize (n) {
           v-for="p in properties"
           :key="p"
         >
+          <v-progress-circular
+            v-if="value[1].load && p==='nom'"
+            indeterminate
+            :size="25"
+            :width="3"
+            :style="{
+              color : `${value[1].color}`
+            }"
+          />
           <span v-if="value[1].attachmentPath===undefined&&p==='nom'">
             <v-icon
               class="tbh pa-5"
@@ -375,13 +380,13 @@ function displaySize (n) {
                 :key="o"
                 class="mb-2"
               >
-                <v-icon v-if="i===hmDisplay.length-1">
+                <v-icon v-if="i===hmDisplay.size-1">
                   mdi-file-plus-outline
                 </v-icon>
                 <v-icon v-else>
                   mdi-file-document-edit-outline
                 </v-icon>
-                {{ o.datemodification }} :
+                {{ o }} :
                 <v-icon
                   v-if="i!==0"
                   color="light-green"

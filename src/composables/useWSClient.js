@@ -78,7 +78,6 @@ class WSClient {
       }
       return e.type === 'error'
     })
-    console.log('fin journ')
     if (event.type === 'error') throw new Error('Erreur indexation')
   }
 }
