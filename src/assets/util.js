@@ -316,7 +316,7 @@ export async function patchDocument (id, payload, folder, chemin) {
       loading.value = true
       try {
         if (date.toISOString() === line.datemodification) {
-          throw new Error('Erreur : Le fichier n\' a pas été modifié')
+          throw new Error('Le fichier : ' + file.name + ' n\'a pas été modifié')
         }
         request = await axios(params)
         loading.value = false

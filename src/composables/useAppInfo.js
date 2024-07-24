@@ -5,7 +5,6 @@ export default function useAppInfo () {
   if (!config) throw new Error('Il n\'y a pas de configuration définie')
   const dataset = config.datasets?.[0]
   if (!dataset) throw new Error('Veuillez sélectionner une source de données')
-  dataset.href = dataset.href.replace('fairapi', 'fair/api')
   const screenSize = window.innerHeight
   const wsUrl = application.wsUrl
   const dataUrl = config.datasets[0].href

@@ -18,7 +18,8 @@ function sendFiles (e) {
     :style="{borderColor: '#1e88e5',
              width : '85%',
              height:'85%',
-             boxSizing : 'border-box'
+             boxSizing : 'border-box',
+             backgroundColor: '#f6fcff'
     }"
     @drop="onDrop"
     @dragover="prevDefault"

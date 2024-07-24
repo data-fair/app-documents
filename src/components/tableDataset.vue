@@ -4,8 +4,8 @@ import { ref, onMounted, reactive } from 'vue'
 import reactiveSearchParams from '@data-fair/lib/vue/reactive-search-params-global.js'
 import CreateDoc from './createDoc.vue'
 import { data, path, pathGED } from '@/context.js'
-const properties = ['nom', 'taille', 'nbrevisions', 'path']
-const propertiesDisplay = ['Nom', 'Taille', 'Nombre de révisions', 'path']
+const properties = ['nom', 'taille', 'nbrevisions']
+const propertiesDisplay = ['Nom', 'Taille', 'Nombre de révisions']
 const menuHistory = ref([]) // following refs are used to display menu after clicking on button on a line of the table
 const menuEditDoc = ref([])
 const menuEditFolder = ref([])

@@ -21,7 +21,6 @@ class WSClient {
         this._channels.forEach((channel) => {
           const subscribeMessage = { type: 'subscribe', channel }
           this._ws.send(JSON.stringify(subscribeMessage))
-          this._channels.push(channel)
         })
       })
       ws.addEventListener('close', (event) => {
