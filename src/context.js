@@ -3,9 +3,9 @@ import { computed, ref } from 'vue'
 import { errorMessage, displayError } from './assets/util.js'
 import useAppInfo from '@/composables/useAppInfo'
 const { dataUrl } = useAppInfo()
-export const path = ref('/') // current path, default is /
-export const pathGED = ref([]) // it represents the navigation bar upon the data table
-export const data = ref(new Map()) // represent the data of the current path, it's used to see if we are not uploading or updating a file we already have
+export const path = ref('/') // current path, default is '/'
+export const pathArray = ref([]) // it represents the navigation bar upon the data table in an array
+export const data = ref(new Map()) // represent the data of the current path, displayed in table but also used to see if we are not uploading or updating a file we already have
 const qs = computed(() => encodeURIComponent('path:"' + path.value + '"'))
 const urlget = computed(() => `${dataUrl}/lines?qs=${qs.value}&q_fields=path&q_mode=complete`) // refresh page if this url changes (if path change)
 // we call afterFetch method to intercept response and do an other request to find all folders to display
@@ -35,10 +35,9 @@ const params = {
     // 2nd step -> get all existing folder of this repository ie search all file with path=path/other_name/ and store this name into folders set
     const tmp = path.value.split('/')
     const p = path.value.replace(/\//g, '\\/').replace(/ /g, '\\ ') // could fail if regexp dont work and provoque error 400
-    const url2 = `${dataUrl}/lines?qs=(path:${p}*)&q_mode=complete`
     const folders = new Set()
     try {
-      const request = await fetch(url2, params)
+      const request = await fetch(`${dataUrl}/lines?qs=(path:${p}*)&q_mode=complete`, params)
       if (request.status === 200) {
         const reponse = await request.json()
         reponse.results.forEach((value) => {

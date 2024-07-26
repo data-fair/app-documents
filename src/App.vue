@@ -1,20 +1,16 @@
 <script setup>
-import { watch } from 'vue'
-import tableDataset from './components/tableDataset.vue'
-import dropFile from './components/dropFile.vue'
+import TableDataset from './components/TableDataset.vue'
+import dropFile from './components/DropFile.vue'
 import { displayError, errorMessage } from './assets/util.js'
-import useAppInfo from './composables/useAppInfo'
-const { screenSize, dataset } = useAppInfo()
-watch(dataset, () => {
-  window.location.reload()
-})
+import { useDisplay } from 'vuetify'
+const { height } = useDisplay()
 </script>
 <template>
   <v-container
     fluid
     class="pa-0"
     :style="{
-      height : `${screenSize}px`
+      height : `${height}px`
     }"
   >
     <v-row class="ma-0 pa-0">
@@ -22,7 +18,7 @@ watch(dataset, () => {
         <div
           :style="{display: 'flex',
                    flexDirection : 'column',
-                   height : `${Math.max(screenSize*0.80,screenSize-120)}px`
+                   height : `${Math.max(height*0.80,height-120)}px`
           }"
         >
           <table-dataset />
@@ -35,7 +31,7 @@ watch(dataset, () => {
           :style="{display: 'flex',
                    justifyContent : 'center',
                    alignItems : 'center',
-                   height : `${Math.min(screenSize*0.20,120)}px`
+                   height : `${Math.min(height*0.20,120)}px`
           }"
         >
           <drop-file />

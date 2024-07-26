@@ -5,15 +5,12 @@ export default function useAppInfo () {
   if (!config) throw new Error('Il n\'y a pas de configuration définie')
   const dataset = config.datasets?.[0]
   if (!dataset) throw new Error('Veuillez sélectionner une source de données')
-  const screenSize = window.innerHeight
   const wsUrl = application.wsUrl
   const dataUrl = config.datasets[0].href
   const datasetId = config.datasets[0].id
   return {
     dataUrl,
     datasetId,
-    wsUrl,
-    screenSize,
-    dataset
+    wsUrl
   }
 }
