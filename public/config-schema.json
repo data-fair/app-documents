@@ -3,38 +3,43 @@
   "required": [
     "datasets"
   ],
+  "x-exports": [
+    "types"
+  ],
   "allOf": [
     {
       "title": "Source de données",
       "properties": {
         "datasets": {
           "type": "array",
-          "items": [
-            {
-              "title": "Jeu de données",
-              "description": "Ce jeu doit contenir au moins une colonne avec valeur numérique",
-              "type": "object",
-              "x-fromUrl": "api/v1/datasets?status=finalized&field-type=integer,number&q={q}&select=id,title&{context.datasetFilter}&rest=true&short-concept=attachment",
-              "x-itemsProp": "results",
-              "x-itemTitle": "title",
-              "x-itemKey": "href",
-              "additionalProperties": false,
-              "properties": {
-                "href": {
-                  "type": "string"
-                },
-                "title": {
-                  "type": "string"
-                },
-                "id": {
-                  "type": "string"
-                },
-                "finalizedAt": {
-                  "type": "string"
-                }
+          "title": "Jeu de données",
+          "description": "Sélectionnez le jeu de données contenant les documents, il doit contenir au moins une pièce jointe (concept attachment)",
+          "layout": {
+            "getItems": {
+              "url": "api/v1/datasets?status=finalized&short-concept=attachment&q={q}&select=id,title&size=50&${context.datasetFilter}",
+              "itemKey": "data.href",
+              "itemTitle": "data.title",
+              "itemsResults": "data.results"
+            }
+          },
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "href": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "finalizedAt": {
+                "type": "string"
               }
             }
-          ]
+          }
         }
       }
     }
