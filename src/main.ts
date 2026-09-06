@@ -1,7 +1,7 @@
 import { createApp } from 'vue'
 import '@data-fair/lib-vuetify/style/global.scss'
+import '@mdi/font/css/materialdesignicons.css'
 import { createVuetify } from 'vuetify'
-import { aliases, mdi } from 'vuetify/iconsets/mdi-svg'
 import { createI18n } from 'vue-i18n'
 import { createSession } from '@data-fair/lib-vue/session.js'
 import { vuetifySessionOptions } from '@data-fair/lib-vuetify'
@@ -27,7 +27,7 @@ async function init () {
 
   const vuetify = createVuetify({
     ...vuetifySessionOptions(session),
-    icons: { defaultSet: 'mdi', aliases, sets: { mdi } }
+    icons: { defaultSet: 'mdi' }
   })
 
   const app = createApp(App)
