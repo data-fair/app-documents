@@ -1,18 +1,14 @@
-<script setup>
+<script setup lang="ts">
 import EditLine from './Edit.vue'
 import Revisions from './Revisions.vue'
 import Download from './Download.vue'
 import Delete from './Delete.vue'
-defineProps({
-  id: {
-    type: String,
-    required: true
-  },
-  line: {
-    type: Object,
-    required: true
-  }
-})
+import type { DocumentLine } from '@/context'
+
+defineProps<{
+  id: string
+  line: DocumentLine
+}>()
 </script>
 <template>
   <edit-line

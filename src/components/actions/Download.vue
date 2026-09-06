@@ -1,32 +1,25 @@
-<script setup>
+<script setup lang="ts">
 import { saveAs } from 'file-saver'
 import useAppInfo from '@/composables/useAppInfo'
-import { displayError, errorMessage } from '@/assets/util.js'
+import { sendUiNotif } from '@/composables/ui-notif'
+
 const { dataUrl } = useAppInfo()
-defineProps({
-  fileUrl: {
-    type: String,
-    required: true
-  },
-  name: {
-    type: String,
-    required: false,
-    default: ''
-  }
-})
-// method : download the old file by using the saveAs method from the file-saver npm package
-// pathD (string) : _id/hash/name of the file to download -> attachmentPath field
-async function downloadFile (fileUrl, name) {
+defineProps<{
+  fileUrl: string
+  name?: string
+}>()
+// download the old file by using the saveAs method from the file-saver npm package
+// fileUrl (string) : _id/hash/name of the file to download -> attachmentPath field
+async function downloadFile (fileUrl: string, name?: string) {
   const url = `${dataUrl}/attachments/${fileUrl}`
   try {
-    const request = await fetch(url)
-    if (request.status === 200) {
-      const reponse = await request.blob()
-      saveAs(reponse, name)
+    const response = await fetch(url)
+    if (response.status === 200) {
+      const blob = await response.blob()
+      saveAs(blob, name)
     }
   } catch (e) {
-    errorMessage.value = e.response.status + ' : ' + e.response.data
-    displayError.value = true
+    sendUiNotif({ type: 'error', msg: 'Erreur lors du téléchargement', error: e })
   }
 }
 </script>

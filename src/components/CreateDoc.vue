@@ -1,11 +1,11 @@
-<script setup>
+<script setup lang="ts">
 import { ref, reactive } from 'vue'
-import { postDocument } from '../assets/util.js'
+import { postDocument, type DocumentPayload } from '@/assets/util'
 const menuDoc = ref(false)
 const menuFolder = ref(false)
-const payloadDocument = reactive({
+const payloadDocument = reactive<DocumentPayload>({
   nom: '',
-  file: ''
+  file: null
 })
 </script>
 <template>
@@ -39,8 +39,8 @@ const payloadDocument = reactive({
       />
       <v-file-input
         v-model="payloadDocument.file"
-        label="Séléctionnez un fichier"
-      /><v-btn @click="postDocument(payloadDocument), menuDoc = false">
+        label="Sélectionnez un fichier"
+      /><v-btn @click="menuDoc = false, postDocument(payloadDocument)">
         Ajouter fichier
       </v-btn>
     </v-card>
@@ -73,7 +73,7 @@ const payloadDocument = reactive({
         type="text"
         label="Nom"
       />
-      <v-btn @click="payloadDocument.file=null,postDocument(payloadDocument), menuFolder = false">
+      <v-btn @click="menuFolder = false, payloadDocument.file = null, postDocument(payloadDocument)">
         Créer dossier
       </v-btn>
     </v-card>

@@ -1,7 +1,7 @@
-<script setup>
+<script setup lang="ts">
 import { pathArray } from '@/context'
 import CreateDoc from './CreateDoc.vue'
-const emit = defineEmits(['update-path'])
+const emit = defineEmits<{ (e: 'update-path', value: string): void }>()
 </script>
 <template>
   <div

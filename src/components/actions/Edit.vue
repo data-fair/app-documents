@@ -1,27 +1,18 @@
-<script setup>
-import { patchDocument } from '@/assets/util.js'
+<script setup lang="ts">
 import { ref, reactive } from 'vue'
+import { patchDocument, type DocumentPayload } from '@/assets/util'
+import type { DocumentLine } from '@/context'
+
 const editFolder = ref(false)
 const editFile = ref(false)
-defineProps({
-  id: {
-    type: String,
-    required: true
-  },
-  line: {
-    type: Object,
-    required: true
-  }
-})
-const payloadDocument = reactive({
+defineProps<{
+  id: string
+  line: DocumentLine
+}>()
+const payloadDocument = reactive<DocumentPayload>({
   nom: '',
-  file: ''
+  file: null
 })
-// method : patch a data
-// if folder, update the path and patch all its dependencies by patching them one by one
-// if file : if we just change name we do a simple patch else we do a post with more parameters in the dataform (_action, _id and attachmentPath)
-// API will understand and automatically update the file and store the old version in revisions (see more on DataFair API)
-
 </script>
 <template>
   <v-menu
@@ -33,7 +24,6 @@ const payloadDocument = reactive({
   >
     <template #activator="{ props }">
       <v-icon
-
         v-tooltip="{
           text: 'Editer le document',
           location: 'right',
@@ -56,12 +46,12 @@ const payloadDocument = reactive({
       />
       <v-file-input
         v-model="payloadDocument.file"
-        label="File input"
+        label="Nouveau fichier (facultatif)"
       />
       <v-card-actions>
         <v-btn
           color="orange"
-          @click="patchDocument(id,payloadDocument,false), editFile=false"
+          @click="editFile = false, patchDocument(id, payloadDocument, false)"
         >
           Modifier
         </v-btn>
@@ -81,7 +71,6 @@ const payloadDocument = reactive({
   >
     <template #activator="{ props }">
       <v-icon
-
         v-tooltip="{
           text: 'Editer le dossier',
           location: 'right',
@@ -105,7 +94,7 @@ const payloadDocument = reactive({
       <v-card-actions>
         <v-btn
           color="orange"
-          @click="patchDocument(id,payloadDocument,true,line.path),editFolder=false"
+          @click="editFolder = false, patchDocument(id, payloadDocument, true, line.path)"
         >
           Modifier
         </v-btn>

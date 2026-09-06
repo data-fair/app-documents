@@ -1,15 +1,16 @@
-<script setup>
-import { postFilesDragDrop } from '../assets/util.js'
-function prevDefault (ev) {
+<script setup lang="ts">
+import { postFilesDragDrop } from '@/assets/util'
+function prevDefault (ev: DragEvent) {
   // Prevent default behavior (Prevent file from being opened)
   ev.preventDefault()
 }
-function onDrop (e) {
+function onDrop (e: DragEvent) {
   e.preventDefault()
-  postFilesDragDrop(e.dataTransfer.files)
+  if (e.dataTransfer) postFilesDragDrop(e.dataTransfer.files)
 }
-function sendFiles (e) {
-  postFilesDragDrop(e.target.files)
+function sendFiles (e: Event) {
+  const target = e.target as HTMLInputElement
+  if (target.files) postFilesDragDrop(target.files)
 }
 </script>
 <template>

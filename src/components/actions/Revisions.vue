@@ -1,35 +1,25 @@
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
+import { ofetch } from 'ofetch'
 import download from './Download.vue'
 import useAppInfo from '@/composables/useAppInfo'
-import { displayError, errorMessage } from '@/assets/util.js'
+import { sendUiNotif } from '@/composables/ui-notif'
+import type { DocumentLine } from '@/context'
+
 const { dataUrl } = useAppInfo()
 const menuHistory = ref(false)
-const hmDisplay = ref([])
-defineProps({
-  id: {
-    type: String,
-    required: true
-  }
-})
-// method : download the old file by using the saveAs method from the file-saver npm package
-// pathD (string) : _id/hash/name of the file to download -> attachmentPath field
-// method : get all the versions of a file, sorted by modification date
-async function getRevisions (ligneId) {
+const hmDisplay = ref<DocumentLine[]>([])
+defineProps<{
+  id: string
+}>()
+// get all the versions of a file, sorted by modification date
+async function getRevisions (ligneId: string) {
   const url = `${dataUrl}/lines/${ligneId}/revisions`
   try {
-    const request = await fetch(url)
-    if (request.status === 200) {
-      hmDisplay.value = []
-      const reponse = await request.json()
-      const lines = reponse.results
-      lines.forEach((value) => {
-        hmDisplay.value.push(value)
-      })
-    }
+    const reponse = await ofetch<{ results: DocumentLine[] }>(url)
+    hmDisplay.value = reponse.results
   } catch (e) {
-    errorMessage.value = e.response.status + ' : ' + e.response.data
-    displayError.value = true
+    sendUiNotif({ type: 'error', msg: 'Erreur lors de la récupération de l\'historique', error: e })
   }
 }
 </script>
@@ -43,7 +33,6 @@ async function getRevisions (ligneId) {
   >
     <template #activator="{ props }">
       <v-icon
-
         v-tooltip="{
           text: 'Voir l\'historique des modifications',
           location: 'right',
@@ -74,10 +63,10 @@ async function getRevisions (ligneId) {
         <v-icon v-else>
           mdi-file-document-edit-outline
         </v-icon>
-        {{ new Date(o.datemodification).toLocaleString() }} :
+        {{ new Date(o.datemodification ?? '').toLocaleString() }} :
         <download
           v-if="i!==0"
-          :file-url="o.attachmentPath"
+          :file-url="o.attachmentPath ?? ''"
           :name="o.nom"
         />
         <span v-else>Version actuelle</span>

@@ -1,78 +1,58 @@
-<script setup>
-import useAppInfo from '@/composables/useAppInfo'
-import { displayError, errorMessage, websock, bufferEvent } from '@/assets/util.js'
-import { data } from '@/context.js'
+<script setup lang="ts">
 import { ref } from 'vue'
+import { ofetch } from 'ofetch'
+import useAppInfo from '@/composables/useAppInfo'
+import { sendUiNotif } from '@/composables/ui-notif'
+import { websock, bufferEvent } from '@/assets/util'
+import { data, type DocumentLine } from '@/context'
+
 const { dataUrl, datasetId } = useAppInfo()
 const menuFile = ref(false)
 const menuFolder = ref(false)
-defineProps({
-  id: {
-    type: String,
-    required: true
-  },
-  line: {
-    type: Object,
-    required: true
-  }
-})
+defineProps<{
+  id: string
+  line: DocumentLine
+}>()
 // method : delete file, API says to use _bulk_lines to delete all of the versions of the file
-async function deleteFile (ligneId) {
+async function deleteFile (ligneId: string) {
   const url = `${dataUrl}/_bulk_lines`
   const doc = [{
     _action: 'delete',
     _id: ligneId
   }]
-  const params = {
-    method: 'POST',
-    body: JSON.stringify(doc),
-    headers: {
-      'Content-type': 'application/json'
-    }
-  }
   bufferEvent.value++
   try {
-    const request = await fetch(url, params)
-    if (request.ok) {
-      const line = data.value.get(ligneId)
-      if (line !== undefined) { // check if file is displayed then activate circular v-progress
-        line.load = true
-        line.color = 'red'
-      }
-      await websock.waitForJournal(datasetId)
+    await ofetch(url, { method: 'POST', body: doc })
+    const line = data.value.get(ligneId)
+    if (line !== undefined) { // check if file is displayed then activate circular v-progress
+      line.load = true
+      line.color = 'red'
     }
+    await websock.waitForJournal(datasetId)
   } catch (e) {
-    errorMessage.value = e.message
-    displayError.value = true
+    sendUiNotif({ type: 'error', msg: 'Erreur lors de la suppression', error: e })
   }
   bufferEvent.value--
 }
 // method : delete folder and all of its dependencies (all files/folders contained in it)
-async function deleteFolder (pathFolder, nameFolder, ligneId) {
+async function deleteFolder (pathFolder: string, nameFolder: string, ligneId: string) {
   if (ligneId === nameFolder) { // it means that we delete a non empty folder
     const str = pathFolder + nameFolder + '/'
     const p = str.replace(/\//g, '\\/').replace(/ /g, '\\ ') // could fail if regexp dont work and provoque error 400
-    const url = `${dataUrl}/lines?q_mode=complete&qs=(path:${p}*)`
-    const params = {
-      method: 'GET',
-      headers: {
-        'Content-type': 'application/json'
-      }
-    }
     try {
-      const request = await fetch(url, params)
-      if (request.ok) {
-        const line = data.value.get(ligneId)
+      const reponse = await ofetch<{ results: DocumentLine[] }>(`${dataUrl}/lines`, {
+        query: { q_mode: 'complete', qs: `(path:${p}*)` }
+      })
+      const line = data.value.get(ligneId)
+      if (line !== undefined) {
         line.load = true
         line.color = 'red'
-        const reponse = await request.json()
-        reponse.results.forEach((value) => {
-          deleteFile(value._id)
-        })
       }
+      reponse.results.forEach((value) => {
+        deleteFile(value._id)
+      })
     } catch (e) {
-      errorMessage.value = e.response.status + ' : ' + e.response.data
-      displayError.value = true
+      sendUiNotif({ type: 'error', msg: 'Erreur lors de la suppression du dossier', error: e })
     }
   } else { // we delete an empty folder with classic deleteFile method
     deleteFile(ligneId)
@@ -115,14 +95,12 @@ async function deleteFolder (pathFolder, nameFolder, ligneId) {
       <v-card-actions>
         <v-btn
           color="red"
-          @click="deleteFile(id),menuFile=false"
+          @click="menuFile = false, deleteFile(id)"
         >
           Supprimer
         </v-btn>
         <v-spacer />
-        <v-btn
-          @click="menuFile=false"
-        >
+        <v-btn @click="menuFile=false">
           Annuler
         </v-btn>
       </v-card-actions>
@@ -163,7 +141,7 @@ async function deleteFolder (pathFolder, nameFolder, ligneId) {
       <v-card-actions>
         <v-btn
           color="red"
-          @click="deleteFolder(line.path,line.name, id),menuFolder=false"
+          @click="menuFolder = false, deleteFolder(line.path ?? '/', line.nom, id)"
         >
           Supprimer
         </v-btn><v-spacer /><v-btn
