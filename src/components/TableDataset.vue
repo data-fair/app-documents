@@ -1,7 +1,7 @@
 <script setup>
 import { loading, percentage, loadingIndex } from '../assets/util.js'
 import { onMounted } from 'vue'
-import reactiveSearchParams from '@data-fair/lib/vue/reactive-search-params-global.js'
+import reactiveSearchParams from '@data-fair/lib-vue/reactive-search-params-global.js'
 import NavigationBar from './NavigationBar.vue'
 import { data, path, pathArray } from '@/context.js'
 import Actions from './actions/Actions.vue'

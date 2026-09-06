@@ -1,51 +1,28 @@
-<script setup>
+<script setup lang="ts">
+import DfUiNotif from '@data-fair/lib-vuetify/ui-notif.vue'
 import TableDataset from './components/TableDataset.vue'
-import dropFile from './components/DropFile.vue'
-import { displayError, errorMessage } from './assets/util.js'
-import { useDisplay } from 'vuetify'
-const { height } = useDisplay()
+import DropFile from './components/DropFile.vue'
 </script>
+
 <template>
-  <v-container
-    fluid
-    class="pa-0"
-    :style="{
-      height : `${height}px`
-    }"
-  >
-    <v-row class="ma-0 pa-0">
-      <v-col class="ma-0 pa-0">
-        <div
-          :style="{display: 'flex',
-                   flexDirection : 'column',
-                   height : `${Math.max(height*0.80,height-120)}px`
-          }"
-        >
-          <table-dataset />
-        </div>
-      </v-col>
-    </v-row>
-    <v-row class="ma-0 pa-0">
-      <v-col class="ma-0 pa-0">
-        <div
-          :style="{display: 'flex',
-                   justifyContent : 'center',
-                   alignItems : 'center',
-                   height : `${Math.min(height*0.20,120)}px`
-          }"
-        >
-          <drop-file />
-        </div>
-      </v-col>
-    </v-row>
-  </v-container>
-  <v-snackbar
-    v-model="displayError"
-    :timeout="'5000'"
-    color="red"
-  >
-    <div>
-      {{ errorMessage }}
+  <v-main class="fill-height">
+    <div
+      class="d-flex flex-column"
+      style="height: 100%"
+    >
+      <div
+        class="flex-grow-1"
+        style="min-height: 0; overflow: auto"
+      >
+        <table-dataset />
+      </div>
+      <div
+        class="d-flex align-center justify-center"
+        style="height: 120px"
+      >
+        <drop-file />
+      </div>
     </div>
-  </v-snackbar>
+  </v-main>
+  <df-ui-notif />
 </template>

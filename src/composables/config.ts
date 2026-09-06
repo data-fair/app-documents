@@ -1,0 +1,108 @@
+import { computed, inject, ref, type App, type Ref } from 'vue'
+import type { Application, Dataset, Field } from '@data-fair/lib-common-types/application/index.js'
+
+export interface ConfigState {
+  application: Application
+  config: Ref<any>
+  setConfig: (newConfig: any) => void
+  notifyConfigChange: (field: string, value: unknown) => void
+  dataset: Ref<Dataset | undefined>
+  datasets: Ref<Dataset[]>
+  fields: Ref<Record<string, Field>>
+  datasetUrl: Ref<string | undefined>
+  finalizedAt: Ref<string | undefined>
+  error: Ref<string | null>
+}
+
+export function createConfig () {
+  const application = window.APPLICATION as Application & { href: string }
+  const config = ref<any>(application?.configuration || {})
+
+  const dataset = computed(() => config.value?.datasets?.[0] as Dataset | undefined)
+  const datasets = computed(() => (config.value?.datasets || []) as Dataset[])
+
+  const fields = computed(() => {
+    const schema = dataset.value?.schema || []
+    return schema.reduce((acc: Record<string, Field>, field: Field) => {
+      if (field.key) acc[field.key] = field
+      return acc
+    }, {})
+  })
+
+  const datasetUrl = computed(() => dataset.value?.href)
+  const finalizedAt = computed(() => dataset.value?.finalizedAt)
+
+  const error = computed(() => {
+    if (!config.value) return 'Il n\'y a pas de configuration définie'
+    if (!dataset.value) return 'Veuillez sélectionner une source de données'
+    return null
+  })
+
+  function setConfig (newConfig: any) {
+    config.value = newConfig
+  }
+
+  function notifyConfigChange (field: string, value: unknown) {
+    if (window.parent !== window) {
+      window.parent.postMessage({
+        type: 'set-config',
+        content: { field, value }
+      }, window.location.origin)
+    }
+  }
+
+  function setByPath (obj: Record<string, unknown>, path: string, value: unknown) {
+    const keys = path.split('.')
+    let current: any = obj
+    for (let i = 0; i < keys.length - 1; i++) {
+      const key = keys[i]
+      if (!(key in current) || typeof current[key] !== 'object' || current[key] === null) {
+        current[key] = {}
+      } else {
+        current[key] = Array.isArray(current[key]) ? [...current[key]] : { ...current[key] }
+      }
+      current = current[key]
+    }
+    current[keys[keys.length - 1]] = value
+  }
+
+  return {
+    install (app: App) {
+      app.provide('data-fair-app-config', {
+        application,
+        config,
+        setConfig,
+        notifyConfigChange,
+        dataset,
+        datasets,
+        fields,
+        datasetUrl,
+        finalizedAt,
+        error
+      })
+
+      window.addEventListener('message', (event) => {
+        if (event.data?.type === 'set-config' && event.data?.content) {
+          const { content } = event.data
+          if (content.configuration) {
+            config.value = content.configuration
+          } else if (content.datasets) {
+            config.value = { ...config.value, ...content }
+          } else if (content.field && 'value' in content) {
+            const newConfig = JSON.parse(JSON.stringify(config.value))
+            setByPath(newConfig, content.field, content.value)
+            config.value = newConfig
+          }
+        }
+      })
+    }
+  }
+}
+
+export function useConfig (): ConfigState {
+  const config = inject<ConfigState>('data-fair-app-config')
+  if (!config) throw new Error('useConfig requires using the plugin createConfig')
+  return config
+}
+
+export default useConfig

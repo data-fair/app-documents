@@ -1,25 +1,31 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html><!-- pas de lang : posé par le proxy data-fair -->
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="x-capture" content="trigger" />
-    <meta name="df:sync-state" content="true">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>@layer vuetify-core, vuetify-components, vuetify-overrides, vuetify-utilities, vuetify-final;</style>
+    <link href="/simple-directory/api/sites/_theme.css" rel="stylesheet">
+    <script src="/simple-directory/api/sites/_public.js"></script>
+
+    <title>GED</title>
+
+    <!-- contrat data-fair, lu à l'exécution -->
+    <meta name="df:vjsf" content="3">
     <meta name="df:filter-concepts" content="false">
+    <meta name="df:sync-config" content="true">
+    <meta name="df:sync-state" content="true">
     <meta name="df:overflow" content="false">
-    <meta name="thumbnail" content="thumbnail.png" />
-    <meta name="{VERSION}" content="trigger" />
+    <meta name="df:capture-delay" content="3">
+
+    <!-- catalogue, lu à l'import — migrera vers registry -->
     <meta name="application-name" content="Gestion de documents">
-    <meta name="description" lang="fr" content="Une application de gestion de documents">
-    <meta name="keywords" lang="fr" content="GED">
-    <title lang="fr">GED</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:300,400,500,700,400italic" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" />
-    <!-- Capture a global variable defined by data-fair's reverse proxy. -->
-    <script type="text/javascript">window.APPLICATION=%APPLICATION%;</script>
+    <meta name="description" content="Une application de gestion de documents">
+
+    <script>window.APPLICATION=%APPLICATION%;</script>
   </head>
   <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
+    <div id="app" style="height:100vh"></div>
+    <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
