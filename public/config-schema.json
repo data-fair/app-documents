@@ -16,7 +16,7 @@
           "description": "Sélectionnez le jeu de données contenant les documents, il doit contenir au moins une pièce jointe (concept attachment)",
           "layout": {
             "getItems": {
-              "url": "api/v1/datasets?status=finalized&short-concept=attachment&q={q}&select=id,title&size=50&${context.datasetFilter}",
+              "url": "api/v1/datasets?status=finalized&short-concept=attachment&q={q}&select=id,title&size=100&${context.datasetFilter}",
               "itemKey": "data.href",
               "itemTitle": "data.title",
               "itemsResults": "data.results"
