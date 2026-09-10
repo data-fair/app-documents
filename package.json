@@ -1,6 +1,6 @@
 {
   "name": "app-document",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "df-dev-env && dotenv -- zellij --layout .zellij.kdl",
