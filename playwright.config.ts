@@ -27,6 +27,6 @@ export default defineConfig({
         command: 'PUBLIC_URL= npm run dev-app',
         url: BASE_URL,
         env: { ...process.env, APP_PORT: String(PORT), DATA_FAIR_TEST: 'true' },
-        reuseExistingServer: !process.env.CI
+        reuseExistingServer: false
       }
 })
