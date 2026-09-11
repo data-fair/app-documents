@@ -1,12 +1,13 @@
 {
-  "name": "app-document",
+  "name": "@data-fair/app-documents",
   "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "df-dev-env && dotenv -- zellij --layout .zellij.kdl",
     "dev-server": "df-dev-server",
     "dev-app": "vite",
-    "build": "vite build",
+    "build": "rm -rf dist && PUBLIC_URL=https://cdn.jsdelivr.net/npm/@data-fair/app-documents@${npm_package_version}/dist vite build",
+    "prepublishOnly": "npm run build",
     "build-test": "PUBLIC_URL=https://staging-koumoul.com/apps/documents/master/ vite build",
     "lint": "eslint .",
     "lint-fix": "eslint --fix .",

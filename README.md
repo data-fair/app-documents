@@ -1,4 +1,4 @@
-# app-document
+# @data-fair/app-documents
 
 Application de gestion de documents (GED) pour [DataFair](https://github.com/data-fair/data-fair) : arborescence de dossiers et de fichiers stockés comme pièces jointes d'un jeu de données, dépôt par glisser-déposer, renommage, versionnement et historique des révisions.
 
