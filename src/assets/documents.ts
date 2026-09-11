@@ -9,6 +9,7 @@ export interface DocumentLine {
   datemodification?: string
   nbrevisions?: number
   load?: boolean
+  pending?: boolean
   color?: string
 }
 
@@ -40,6 +41,15 @@ export function buildLinesMap (results: DocumentLine[], folderNames: string[], c
   }
   for (const name of folderNames) {
     lines.set(name, { nom: name, _id: name, path: currentPath, attachmentPath: undefined })
+  }
+  return lines
+}
+
+export function mergePendingLines (lines: Map<string, DocumentLine>, previous: Map<string, DocumentLine>, currentPath: string): Map<string, DocumentLine> {
+  for (const [id, line] of previous) {
+    if (line.pending === true && line.path === currentPath && !lines.has(id)) {
+      lines.set(id, line)
+    }
   }
   return lines
 }

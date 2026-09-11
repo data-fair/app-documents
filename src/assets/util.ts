@@ -100,6 +100,7 @@ export async function postDocument (payload: DocumentPayload) {
         postOk = true
         const line = toDocumentLine(request.data)
         line.load = true
+        line.pending = true
         line.color = '#1e88e5'
         data.value.set(line._id, line)
       }
@@ -124,6 +125,7 @@ export async function postDocument (payload: DocumentPayload) {
       const line = await ofetch<DocumentLine>(url, { method: 'POST', body: doc })
       postOk = true
       line.load = true
+      line.pending = true
       line.color = '#1e88e5'
       data.value.set(line._id, line)
     } catch (e) {
@@ -142,7 +144,7 @@ export async function postDocument (payload: DocumentPayload) {
       const p = encodeURIComponent('path:/' + str + '/')
       try {
         const rep = await ofetch<{ results: DocumentLine[] }>(`${dataUrl}/lines`, {
-          query: { q: name, q_fields: 'nom', q_mode: 'simple', qs: `${p} and type_mime:"_folder"` }
+          query: { q: name, q_fields: 'nom', q_mode: 'simple', qs: `${p} and type_mime:"_folder"`, _r: Date.now() }
         })
         if (rep.results[0] !== undefined) {
           const id = rep.results[0]._id
@@ -258,7 +260,7 @@ export async function patchDocument (id: string, payload: DocumentPayload, folde
       const p = escapeQueryPath(str)
       try {
         const reponse = await ofetch<{ results: DocumentLine[] }>(`${dataUrl}/lines`, {
-          query: { q_mode: 'complete', qs: `(path:${p}*)` }
+          query: { q_mode: 'complete', qs: `(path:${p}*)`, _r: Date.now() }
         })
         const updated = data.value.get(id)
         if (updated !== undefined) updated.nom = nom

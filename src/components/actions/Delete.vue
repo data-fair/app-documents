@@ -41,7 +41,7 @@ async function deleteFolder (pathFolder: string, nameFolder: string, ligneId: st
     const p = str.replace(/\//g, '\\/').replace(/ /g, '\\ ') // could fail if regexp dont work and provoque error 400
     try {
       const reponse = await ofetch<{ results: DocumentLine[] }>(`${dataUrl}/lines`, {
-        query: { q_mode: 'complete', qs: `(path:${p}*)` }
+        query: { q_mode: 'complete', qs: `(path:${p}*)`, _r: Date.now() }
       })
       const line = data.value.get(ligneId)
       if (line !== undefined) {

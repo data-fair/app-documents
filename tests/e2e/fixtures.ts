@@ -76,11 +76,15 @@ function nextId () {
 }
 
 export const test = base.extend<{
-  ged: { page: Page, emitJournal: () => void, lines: MockLine[] }
+  ged: { page: Page, emitJournal: () => void, lines: MockLine[], freezeReads: () => void, unfreezeReads: () => void }
 }>({
       ged: async ({ page }, use) => {
         const lines = initialLines()
+        let frozenLines: MockLine[] | null = null
         let wsServer: WebSocketRoute | null = null
+
+        const freezeReads = () => { frozenLines = lines.map(l => ({ ...l })) }
+        const unfreezeReads = () => { frozenLines = null }
 
         const emitJournal = () => {
           setTimeout(() => {
@@ -115,18 +119,19 @@ export const test = base.extend<{
 
           // GET /lines — liste d'un dossier, enfants d'un préfixe, ou scan complet pour l'extraction des dossiers
           if (suffix === '/lines' && request.method() === 'GET') {
+            const source = frozenLines ?? lines
             if (url.searchParams.get('select') === 'path') {
-              return route.fulfill({ json: { results: lines } })
+              return route.fulfill({ json: { results: source } })
             }
             const qs = url.searchParams.get('qs') ?? ''
             const scanMatch = qs.match(/\(path:([^)]+)\)/)
             if (scanMatch) {
               let prefix = scanMatch[1].replace(/\\\//g, '/').replace(/\\ /g, ' ')
               prefix = prefix.replace(/\*$/, '')
-              return route.fulfill({ json: { results: lines.filter(l => l.path.startsWith(prefix)) } })
+              return route.fulfill({ json: { results: source.filter(l => l.path.startsWith(prefix)) } })
             }
             const path = qs.match(/path:"([^"]+)"/)?.[1] ?? '/'
-            return route.fulfill({ json: { results: lines.filter(l => l.path === path) } })
+            return route.fulfill({ json: { results: source.filter(l => l.path === path) } })
           }
 
           // POST /lines — création de dossier (json), création de fichier (multipart)
@@ -244,7 +249,7 @@ export const test = base.extend<{
           }
         })
 
-        await use({ page, emitJournal, lines })
+        await use({ page, emitJournal, lines, freezeReads, unfreezeReads })
       }
     })
 

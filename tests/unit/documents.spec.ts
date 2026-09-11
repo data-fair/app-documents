@@ -4,6 +4,7 @@ import {
   displaySize,
   escapeQueryPath,
   extractFolderNames,
+  mergePendingLines,
   navigatePath,
   type DocumentLine
 } from '../../src/assets/documents'
@@ -81,6 +82,44 @@ test.describe('buildLinesMap', () => {
     const map = buildLinesMap(files, [], '/')
     expect(map.get('file1')?.nom).toBe('rapport.pdf')
     expect(files[0].load).toBeUndefined()
+  })
+})
+
+test.describe('mergePendingLines', () => {
+  test('conserve une ligne en cours de création absente de la réponse', () => {
+    const lines = new Map<string, DocumentLine>([['file1', { _id: 'file1', nom: 'rapport.pdf' }]])
+    const previous = new Map<string, DocumentLine>([['new1', { _id: 'new1', nom: 'nouveau.txt', path: '/', load: true, pending: true, color: '#1e88e5' }]])
+    const merged = mergePendingLines(lines, previous, '/')
+    expect(merged.get('new1')?.nom).toBe('nouveau.txt')
+    expect(merged.get('new1')?.pending).toBe(true)
+  })
+
+  test('ignore les lignes en attente dun autre dossier', () => {
+    const lines = new Map<string, DocumentLine>()
+    const previous = new Map<string, DocumentLine>([['new1', { _id: 'new1', nom: 'nouveau.txt', path: '/docs/', pending: true }]])
+    const merged = mergePendingLines(lines, previous, '/')
+    expect(merged.has('new1')).toBe(false)
+  })
+
+  test('ne conserve pas les lignes terminées absentes de la réponse', () => {
+    const lines = new Map<string, DocumentLine>()
+    const previous = new Map<string, DocumentLine>([['file1', { _id: 'file1', nom: 'ancien.pdf', path: '/' }]])
+    const merged = mergePendingLines(lines, previous, '/')
+    expect(merged.size).toBe(0)
+  })
+
+  test('ne conserve pas une suppression en cours (load sans pending)', () => {
+    const lines = new Map<string, DocumentLine>()
+    const previous = new Map<string, DocumentLine>([['file1', { _id: 'file1', nom: 'supprime.pdf', path: '/', load: true, color: 'red' }]])
+    const merged = mergePendingLines(lines, previous, '/')
+    expect(merged.size).toBe(0)
+  })
+
+  test('ne remplace pas une ligne présente dans la réponse', () => {
+    const lines = new Map<string, DocumentLine>([['file1', { _id: 'file1', nom: 'a-jour.pdf' }]])
+    const previous = new Map<string, DocumentLine>([['file1', { _id: 'file1', nom: 'en-attente.pdf', path: '/', pending: true }]])
+    const merged = mergePendingLines(lines, previous, '/')
+    expect(merged.get('file1')?.nom).toBe('a-jour.pdf')
   })
 })
 

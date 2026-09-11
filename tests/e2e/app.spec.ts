@@ -52,6 +52,23 @@ test('dépose un fichier dans la zone de dépôt', async ({ ged }) => {
   await expect(page.locator('tbody tr', { hasText: 'nouveau-fichier.txt' })).toBeVisible()
 })
 
+test('conserve le document ajouté quand le rafraîchissement renvoie une liste périmée', async ({ ged }) => {
+  const { page } = ged
+  await page.goto('/')
+  await expect(page.locator('tbody tr', { hasText: 'rapport.pdf' })).toBeVisible()
+  ged.freezeReads()
+  const listRead = page.waitForResponse(r => r.request().method() === 'GET' && r.url().includes('/lines') && r.url().includes('q_fields=path') && r.url().includes('_r=1'))
+  const folderRead = page.waitForResponse(r => r.request().method() === 'GET' && r.url().includes('/lines') && r.url().includes('select=path') && r.url().includes('_r=1'))
+  await page.setInputFiles('#file', {
+    name: 'pas-encore-indexe.txt',
+    mimeType: 'text/plain',
+    buffer: Buffer.from('contenu du nouveau fichier')
+  })
+  await Promise.all([listRead, folderRead])
+  await page.waitForTimeout(300)
+  await expect(page.locator('tbody tr', { hasText: 'pas-encore-indexe.txt' })).toBeVisible()
+})
+
 test('remplace un fichier déposé en doublon puis refuse un doublon via le menu', async ({ ged }) => {
   const { page } = ged
   await page.goto('/')
