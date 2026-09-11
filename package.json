@@ -1,6 +1,6 @@
 {
   "name": "@data-fair/app-documents",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "module",
   "scripts": {
     "dev": "df-dev-env && dotenv -- zellij --layout .zellij.kdl",
