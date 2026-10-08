@@ -11,6 +11,8 @@ export interface DocumentLine {
   load?: boolean
   pending?: boolean
   color?: string
+  // champs de métadonnées configurables
+  [key: string]: unknown
 }
 
 export interface LinesResponse {

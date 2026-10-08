@@ -1,13 +1,25 @@
 import { computed, inject, ref, type App, type Ref } from 'vue'
 import type { Application, Dataset, Field } from '@data-fair/lib-common-types/application/index.js'
+import type { MetadataField } from '@/assets/ged'
+
+export interface GedDataset {
+  id?: string
+  href?: string
+  title?: string
+  finalizedAt?: string
+  applicationKeyPermissions?: Record<string, unknown>
+  managedByApp?: boolean
+}
 
 export interface ConfigState {
   application: Application
   config: Ref<any>
   setConfig: (newConfig: any) => void
+  setDataset: (dataset: GedDataset) => void
   notifyConfigChange: (field: string, value: unknown) => void
   dataset: Ref<Dataset | undefined>
   datasets: Ref<Dataset[]>
+  metadata: Ref<MetadataField[]>
   fields: Ref<Record<string, Field>>
   datasetUrl: Ref<string | undefined>
   finalizedAt: Ref<string | undefined>
@@ -20,6 +32,7 @@ export function createConfig () {
 
   const dataset = computed(() => config.value?.datasets?.[0] as Dataset | undefined)
   const datasets = computed(() => (config.value?.datasets || []) as Dataset[])
+  const metadata = computed(() => (config.value?.metadata || []) as MetadataField[])
 
   const fields = computed(() => {
     const schema = dataset.value?.schema || []
@@ -38,8 +51,20 @@ export function createConfig () {
     return null
   })
 
-  function setConfig (newConfig: any) {
+  function applyConfig (newConfig: any) {
     config.value = newConfig
+    // useAppInfo lit window.APPLICATION.configuration : on garde les deux sources alignées
+    application.configuration = newConfig
+  }
+
+  function setConfig (newConfig: any) {
+    applyConfig(newConfig)
+  }
+
+  // adoption du jeu de données créé ou trouvé : on met à jour la config locale et on la remonte au parent
+  function setDataset (dataset: GedDataset) {
+    applyConfig({ ...config.value, datasets: [dataset] })
+    notifyConfigChange('datasets', [dataset])
   }
 
   function notifyConfigChange (field: string, value: unknown) {
@@ -72,9 +97,11 @@ export function createConfig () {
         application,
         config,
         setConfig,
+        setDataset,
         notifyConfigChange,
         dataset,
         datasets,
+        metadata,
         fields,
         datasetUrl,
         finalizedAt,
@@ -85,13 +112,13 @@ export function createConfig () {
         if (event.data?.type === 'set-config' && event.data?.content) {
           const { content } = event.data
           if (content.configuration) {
-            config.value = content.configuration
+            applyConfig(content.configuration)
           } else if (content.datasets) {
-            config.value = { ...config.value, ...content }
+            applyConfig({ ...config.value, ...content })
           } else if (content.field && 'value' in content) {
             const newConfig = JSON.parse(JSON.stringify(config.value))
             setByPath(newConfig, content.field, content.value)
-            config.value = newConfig
+            applyConfig(newConfig)
           }
         }
       })

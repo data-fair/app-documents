@@ -34,7 +34,15 @@ La configuration de développement courante vit dans `.dev-config.json` (git-ign
 
 ## Schéma de configuration
 
-`public/config-schema.json` est la source unique (vocabulaire VJSF 3) : il est servi tel quel à DataFair et ré-exporté par `src/config/schema.ts` pour générer les types (`src/config/.type/`, git-ignoré, ré-exportés par `src/config/index.ts`). Le sélecteur de jeu de données déclare le prérequis « pièces jointes » (`short-concept=attachment`) dans l'URL du sélecteur.
+`public/config-schema.json` est la source unique (vocabulaire VJSF 3) : il est servi tel quel à DataFair et ré-exporté par `src/config/schema.ts` pour générer les types (`src/config/.type/`, git-ignoré, ré-exportés par `src/config/index.ts`). Le sélecteur de jeu de données (facultatif) filtre les jeux de données éditables exposant une pièce jointe (`rest=true&short-concept=attachment`).
+
+## Jeu de données
+
+Par défaut la GED crée et gère son propre jeu de données, **fragment de l'application** (`partOf`), ce qui réserve l'accès aux membres ayant des droits sur l'application. Le schéma est construit à partir des colonnes techniques (dont le champ pièce jointe `attachmentPath`, concept `attachment`) et des champs de métadonnées déclarés dans la configuration : ajouter un champ de métadonnées ajoute la colonne correspondante (jamais de suppression). Le champ `datasets` permet de sélectionner un jeu de données existant à la place, à condition qu'il soit éditable, finalisé, avec historique activé (`rest.history=true`) et un champ pièce jointe.
+
+## Recherche
+
+Une barre de recherche interroge en plein-texte (nom + métadonnées textuelles) l'ensemble de l'arborescence via l'API `/lines` (`q`/`q_fields`) et affiche les résultats avec leur dossier.
 
 ## Tests
 

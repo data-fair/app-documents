@@ -6,8 +6,13 @@ import useWSClient from '@/composables/useWSClient'
 import { sendUiNotif } from '@/composables/ui-notif'
 import { data, escapeQueryPath, path, pathArray, refreshCounter, type DocumentLine } from '@/context'
 
-const { dataUrl, datasetId, wsUrl } = useAppInfo()
-export const websock = useWSClient(wsUrl) // handle and listen the websocket to have info when data-fair finished indexing data
+// le websocket est créé paresseusement : au chargement l'application peut ne pas encore avoir de jeu de données
+let wsCache: { wsUrl: string, client: ReturnType<typeof useWSClient> } | null = null
+export function websock () {
+  const { wsUrl } = useAppInfo()
+  if (!wsCache || wsCache.wsUrl !== wsUrl) wsCache = { wsUrl, client: useWSClient(wsUrl) }
+  return wsCache.client // handle and listen the websocket to have info when data-fair finished indexing data
+}
 export const loading = ref(false) // show a progress bar when uploading a file
 export const loadingIndex = ref(false) // show a progress bar when data-fair is indexing the file
 export const percentage = ref(0) // value of the progress bar loading
@@ -24,6 +29,14 @@ watch(bufferEvent, () => {
 export interface DocumentPayload {
   nom: string
   file: File | File[] | null
+  metadata?: Record<string, unknown>
+}
+
+function appendMetadata (formData: FormData, metadata?: Record<string, unknown>) {
+  for (const [key, value] of Object.entries(metadata ?? {})) {
+    if (value === undefined || value === null || value === '') continue
+    formData.append(key, String(value))
+  }
 }
 
 function toSingleFile (file: File | File[] | null): File | null {
@@ -51,22 +64,11 @@ function setLinePending (id: string, color: string) {
 }
 
 export function toDocumentLine (raw: any): DocumentLine {
-  return {
-    nom: raw.nom,
-    _id: raw._id,
-    attachmentPath: raw.attachmentPath,
-    taille: raw.taille,
-    type_mime: raw.type_mime,
-    path: raw.path,
-    datecreation: raw.datecreation,
-    datemodification: raw.datemodification,
-    nbrevisions: raw.nbrevisions,
-    load: raw.load,
-    color: raw.color
-  }
+  return { ...raw }
 }
 
 export async function postDocument (payload: DocumentPayload) {
+  const { dataUrl, datasetId } = useAppInfo()
   const { nom, file: rawFile } = payload
   const file = toSingleFile(rawFile)
   const url = `${dataUrl}/lines`
@@ -82,6 +84,7 @@ export async function postDocument (payload: DocumentPayload) {
     formData.append('datemodification', date.toISOString())
     formData.append('path', path.value)
     formData.append('type_mime', file.type)
+    appendMetadata(formData, payload.metadata)
     formData.append('_action', 'create')
     percentage.value = 0
     loading.value = true
@@ -158,7 +161,7 @@ export async function postDocument (payload: DocumentPayload) {
   bufferEvent.value++
   if (postOk) {
     try {
-      await websock.waitForJournal(datasetId)
+      await websock().waitForJournal(datasetId)
     } catch (e) {
       sendUiNotif({ type: 'error', msg: e instanceof Error ? e.message : 'Erreur d\'indexation', error: e })
     }
@@ -190,6 +193,7 @@ export async function postFilesDragDrop (filesInput: FileList | File[]) {
 }
 
 export async function patchDocument (id: string, payload: DocumentPayload, folder: boolean, chemin?: string) {
+  const { dataUrl, datasetId } = useAppInfo()
   const { nom, file: rawFile } = payload
   const file = toSingleFile(rawFile)
   const line = data.value.get(id)
@@ -209,6 +213,7 @@ export async function patchDocument (id: string, payload: DocumentPayload, folde
         formData.append('path', line.path ?? path.value)
         formData.append('taille', String(file.size))
         formData.append('type_mime', file.type)
+        appendMetadata(formData, payload.metadata)
         formData.append('_action', 'update')
         formData.append('_id', id)
         formData.append('attachmentPath', line.attachmentPath ?? '')
@@ -227,15 +232,16 @@ export async function patchDocument (id: string, payload: DocumentPayload, folde
           loading.value = false
           if (request.status === 200) {
             setLinePending(id, '#1e88e5')
-            await websock.waitForJournal(datasetId)
+            await websock().waitForJournal(datasetId)
           }
         } catch (e) {
           loading.value = false
           sendUiNotif({ type: 'error', msg: e instanceof Error ? e.message : 'Erreur lors de la modification du fichier', error: e })
         }
-      } else if (!file) { // we only change the name
+      } else if (!file) { // we only change the name and/or the metadata
         const formData = new FormData()
         formData.append('nom', nom || line.nom)
+        appendMetadata(formData, payload.metadata)
         try {
           await ofetch(`${dataUrl}/lines/${id}`, { method: 'PATCH', body: formData })
           const updated = data.value.get(id)
@@ -243,7 +249,7 @@ export async function patchDocument (id: string, payload: DocumentPayload, folde
             updated.nom = nom || updated.nom
             setLinePending(id, '#1e88e5')
           }
-          await websock.waitForJournal(datasetId)
+          await websock().waitForJournal(datasetId)
         } catch (e) {
           sendUiNotif({ type: 'error', msg: e instanceof Error ? e.message : 'Erreur lors du renommage', error: e })
         }
@@ -277,7 +283,7 @@ export async function patchDocument (id: string, payload: DocumentPayload, folde
             sendUiNotif({ type: 'error', msg: 'Erreur lors du renommage du contenu du dossier', error: e })
           }
         }))
-        await websock.waitForJournal(datasetId)
+        await websock().waitForJournal(datasetId)
       } catch (e) {
         sendUiNotif({ type: 'error', msg: 'Erreur lors du renommage du dossier', error: e })
       }

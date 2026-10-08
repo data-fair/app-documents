@@ -28,7 +28,7 @@ async function deleteFile (ligneId: string) {
       line.load = true
       line.color = 'red'
     }
-    await websock.waitForJournal(datasetId)
+    await websock().waitForJournal(datasetId)
   } catch (e) {
     sendUiNotif({ type: 'error', msg: 'Erreur lors de la suppression', error: e })
   }

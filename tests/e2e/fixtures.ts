@@ -120,6 +120,11 @@ export const test = base.extend<{
           // GET /lines — liste d'un dossier, enfants d'un préfixe, ou scan complet pour l'extraction des dossiers
           if (suffix === '/lines' && request.method() === 'GET') {
             const source = frozenLines ?? lines
+            const q = url.searchParams.get('q')
+            if (q) {
+              const needle = q.toLowerCase()
+              return route.fulfill({ json: { results: source.filter(l => (l.nom ?? '').toLowerCase().includes(needle)) } })
+            }
             if (url.searchParams.get('select') === 'path') {
               return route.fulfill({ json: { results: source } })
             }
@@ -245,7 +250,8 @@ export const test = base.extend<{
           exposedUrl: `${baseUrl}/app/app0`,
           wsUrl: `ws://${new URL(baseUrl).host}/ws`,
           configuration: {
-            datasets: [{ id: datasetId, href: datasetHref, title: 'Test-GED', finalizedAt: '2026-01-01T00:00:00.000Z' }]
+            datasets: [{ id: datasetId, href: datasetHref, title: 'Test-GED', finalizedAt: '2026-01-01T00:00:00.000Z' }],
+            metadata: [{ key: 'auteur', title: 'Auteur', type: 'string' }]
           }
         })
 

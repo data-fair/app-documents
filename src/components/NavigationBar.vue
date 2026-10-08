@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { pathArray } from '@/context'
+import { pathArray, searchQuery } from '@/context'
 import CreateDoc from './CreateDoc.vue'
 const emit = defineEmits<{ (e: 'update-path', value: string): void }>()
 </script>
@@ -42,6 +42,17 @@ const emit = defineEmits<{ (e: 'update-path', value: string): void }>()
       <template
         #actions
       >
+        <v-text-field
+          v-model="searchQuery"
+          density="compact"
+          variant="solo"
+          hide-details
+          clearable
+          prepend-inner-icon="mdi-magnify"
+          placeholder="Rechercher"
+          class="mr-2"
+          :style="{ maxWidth: '16em' }"
+        />
         <CreateDoc />
       </template>
     </v-banner>

@@ -1,22 +1,19 @@
 {
   "type": "object",
-  "required": [
-    "datasets"
-  ],
   "x-exports": [
     "types"
   ],
   "allOf": [
     {
-      "title": "Source de données",
+      "title": "Documents",
       "properties": {
         "datasets": {
           "type": "array",
           "title": "Jeu de données",
-          "description": "Sélectionnez le jeu de données contenant les documents, il doit contenir au moins une pièce jointe (concept attachment)",
+          "description": "Laisser vide : la GED crée et gère son propre jeu de données, fragment de l'application. Sélectionnez un jeu de données uniquement pour en réutiliser un existant, éditable (REST) et exposant une pièce jointe (concept attachment).",
           "layout": {
             "getItems": {
-              "url": "api/v1/datasets?status=finalized&short-concept=attachment&q={q}&select=id,title&size=100&${context.datasetFilter}",
+              "url": "api/v1/datasets?status=finalized&rest=true&short-concept=attachment&q={q}&select=id,title&size=100&${context.datasetFilter}",
               "itemKey": "data.href",
               "itemTitle": "data.title",
               "itemsResults": "data.results"
@@ -37,6 +34,75 @@
               },
               "finalizedAt": {
                 "type": "string"
+              },
+              "applicationKeyPermissions": {
+                "type": "object"
+              },
+              "managedByApp": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "Métadonnées",
+      "properties": {
+        "metadata": {
+          "type": "array",
+          "title": "Champs de métadonnées",
+          "description": "Champs supplémentaires associés à chaque document. Ils sont créés comme colonnes du jeu de données et sont inclus dans la recherche.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "key",
+              "title"
+            ],
+            "properties": {
+              "key": {
+                "type": "string",
+                "title": "Identifiant technique",
+                "description": "Lettres, chiffres et tirets bas uniquement, sans accent ni espace.",
+                "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$"
+              },
+              "title": {
+                "type": "string",
+                "title": "Libellé"
+              },
+              "type": {
+                "type": "string",
+                "title": "Type",
+                "default": "string",
+                "oneOf": [
+                  {
+                    "const": "string",
+                    "title": "Texte"
+                  },
+                  {
+                    "const": "number",
+                    "title": "Nombre"
+                  },
+                  {
+                    "const": "boolean",
+                    "title": "Oui / Non"
+                  },
+                  {
+                    "const": "date",
+                    "title": "Date"
+                  }
+                ]
+              },
+              "required": {
+                "type": "boolean",
+                "title": "Obligatoire",
+                "default": false
+              },
+              "searchable": {
+                "type": "boolean",
+                "title": "Inclus dans la recherche",
+                "default": true
               }
             }
           }

@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { postDocument, type DocumentPayload } from '@/assets/util'
+import MetadataFields from './MetadataFields.vue'
 const menuDoc = ref(false)
 const menuFolder = ref(false)
 const payloadDocument = reactive<DocumentPayload>({
   nom: '',
-  file: null
+  file: null,
+  metadata: {}
 })
 </script>
 <template>
@@ -40,7 +42,9 @@ const payloadDocument = reactive<DocumentPayload>({
       <v-file-input
         v-model="payloadDocument.file"
         label="Sélectionnez un fichier"
-      /><v-btn @click="menuDoc = false, postDocument(payloadDocument)">
+      />
+      <metadata-fields v-model="payloadDocument.metadata" />
+      <v-btn @click="menuDoc = false, postDocument(payloadDocument)">
         Ajouter fichier
       </v-btn>
     </v-card>

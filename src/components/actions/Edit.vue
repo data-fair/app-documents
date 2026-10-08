@@ -1,18 +1,30 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { patchDocument, type DocumentPayload } from '@/assets/util'
+import { useConfig } from '@/composables/config'
+import MetadataFields from '../MetadataFields.vue'
 import type { DocumentLine } from '@/context'
 
 const editFolder = ref(false)
 const editFile = ref(false)
-defineProps<{
+const { id, line } = defineProps<{
   id: string
   line: DocumentLine
 }>()
+const { metadata: metadataConfig } = useConfig()
 const payloadDocument = reactive<DocumentPayload>({
   nom: '',
-  file: null
+  file: null,
+  metadata: {}
 })
+for (const field of metadataConfig.value) {
+  payloadDocument.metadata![field.key] = line[field.key] ?? ''
+}
+
+function submitFile () {
+  editFile.value = false
+  patchDocument(id, payloadDocument, false)
+}
 </script>
 <template>
   <v-menu
@@ -37,7 +49,7 @@ const payloadDocument = reactive<DocumentPayload>({
     </template>
     <v-card
       class="pa-3"
-      :style="{width: '20em'}"
+      :style="{width: '22em'}"
     >
       <v-text-field
         v-model="payloadDocument.nom"
@@ -48,10 +60,11 @@ const payloadDocument = reactive<DocumentPayload>({
         v-model="payloadDocument.file"
         label="Nouveau fichier (facultatif)"
       />
+      <metadata-fields v-model="payloadDocument.metadata" />
       <v-card-actions>
         <v-btn
           color="orange"
-          @click="editFile = false, patchDocument(id, payloadDocument, false)"
+          @click="submitFile"
         >
           Modifier
         </v-btn>

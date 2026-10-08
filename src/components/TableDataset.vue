@@ -1,14 +1,19 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { loading, percentage, loadingIndex } from '@/assets/util'
 import reactiveSearchParams from '@data-fair/lib-vue/reactive-search-params-global.js'
 import NavigationBar from './NavigationBar.vue'
-import { data, displaySize, navigatePath, path, pathArray, useDocuments } from '@/context'
+import { data, displaySize, isSearching, navigatePath, path, pathArray, searchQuery, useDocuments, type DocumentLine } from '@/context'
 import Actions from './actions/Actions.vue'
 
 useDocuments()
 
-const properties = ['nom', 'taille', 'nbrevisions'] as const
-const propertiesDisplay: string[] = ['Nom', 'Taille', 'Nombre de révisions']
+const properties = computed(() => isSearching.value
+  ? ['nom', 'path', 'taille', 'nbrevisions']
+  : ['nom', 'taille', 'nbrevisions'])
+const propertiesDisplay = computed(() => isSearching.value
+  ? ['Nom', 'Dossier', 'Taille', 'Nombre de révisions']
+  : ['Nom', 'Taille', 'Nombre de révisions'])
 const fileFormat = new Map<string, string>([['application/json', 'mdi-code-json'], ['', 'mdi-file-outline'],
   ['image/png', 'mdi-image-outline'],
   ['application/vnd.ms-excel', 'mdi-file-table-outline'],
@@ -22,6 +27,21 @@ function navigationPath (nomfolder: string) {
   path.value = newPath
   pathArray.value = newPathArray
   reactiveSearchParams.path = newPath
+}
+
+// en mode recherche, ouvre le dossier contenant le document
+function openFolder (target?: string) {
+  if (!target) return
+  searchQuery.value = ''
+  path.value = target
+  pathArray.value = target.split('/').filter(Boolean)
+  reactiveSearchParams.path = target
+}
+
+// un dossier trouvé en recherche peut être dans n'importe quel dossier : on ouvre son chemin complet
+function onFolderClick (line: DocumentLine) {
+  if (isSearching.value) openFolder(`${line.path ?? '/'}${line.nom}/`)
+  else navigationPath(line.nom)
 }
 </script>
 <template>
@@ -100,7 +120,7 @@ function navigationPath (nomfolder: string) {
             <v-icon
               v-else
               class="tbh pa-5"
-              @click="navigationPath(line.nom)"
+              @click="onFolderClick(line)"
             >
               mdi-folder
             </v-icon>
@@ -116,7 +136,7 @@ function navigationPath (nomfolder: string) {
               :style="{
                 cursor: 'pointer'
               }"
-              @click="navigationPath(line.nom)"
+              @click="onFolderClick(line)"
             >{{ line[p] }}</div>
           </span>
           <span v-else-if="p==='nom'">
@@ -127,6 +147,15 @@ function navigationPath (nomfolder: string) {
             <div
               class="d-inline ml-2"
             >{{ line[p] }}</div>
+          </span>
+          <span v-else-if="p==='path'">
+            <v-btn
+              variant="text"
+              density="compact"
+              @click="openFolder(line.path)"
+            >
+              {{ line.path }}
+            </v-btn>
           </span>
           <span v-else-if="p==='taille' && line.attachmentPath!==undefined">{{ displaySize(line.taille ?? 0) }}</span>
           <span v-else>{{ line[p] }}</span>

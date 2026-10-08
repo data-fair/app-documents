@@ -120,6 +120,25 @@ test('supprime un dossier et tout son contenu', async ({ ged }) => {
   await expect(page.locator('tbody tr', { hasText: 'rapport.pdf' })).toBeVisible()
 })
 
+test('recherche un document dans toute larborescence', async ({ ged }) => {
+  const { page } = ged
+  await page.goto('/')
+  await expect(page.locator('tbody tr', { hasText: 'rapport.pdf' })).toBeVisible()
+  await page.getByPlaceholder('Rechercher').fill('notes')
+  await expect(page.locator('tbody tr', { hasText: 'notes.txt' })).toBeVisible()
+  await expect(page.locator('tbody tr', { hasText: 'rapport.pdf' })).toHaveCount(0)
+  await page.getByPlaceholder('Rechercher').clear()
+  await expect(page.locator('tbody tr', { hasText: 'rapport.pdf' })).toBeVisible()
+})
+
+test('affiche les champs de métadonnées à lédition dun document', async ({ ged }) => {
+  const { page } = ged
+  await page.goto('/')
+  const row = page.locator('tbody tr', { hasText: 'rapport.pdf' })
+  await row.locator('.mdi-pencil').click()
+  await expect(page.getByLabel('Auteur')).toBeVisible()
+})
+
 test('affiche lhistorique des révisions dun fichier', async ({ ged }) => {
   const { page } = ged
   await page.goto('/')
