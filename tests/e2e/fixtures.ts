@@ -75,11 +75,18 @@ function nextId () {
   return `new-${idCounter}`
 }
 
+export interface CapturedRequest {
+  method: string
+  suffix: string
+  body: string | null
+}
+
 export const test = base.extend<{
-  ged: { page: Page, emitJournal: () => void, lines: MockLine[], freezeReads: () => void, unfreezeReads: () => void }
+  ged: { page: Page, emitJournal: () => void, lines: MockLine[], requests: CapturedRequest[], freezeReads: () => void, unfreezeReads: () => void }
 }>({
       ged: async ({ page }, use) => {
         const lines = initialLines()
+        const requests: CapturedRequest[] = []
         let frozenLines: MockLine[] | null = null
         let wsServer: WebSocketRoute | null = null
 
@@ -116,6 +123,7 @@ export const test = base.extend<{
           const url = new URL(request.url())
           const pathname = url.pathname
           const suffix = pathname.slice(datasetHref.length)
+          requests.push({ method: request.method(), suffix, body: request.postData() })
 
           // GET /lines — liste d'un dossier, enfants d'un préfixe, ou scan complet pour l'extraction des dossiers
           if (suffix === '/lines' && request.method() === 'GET') {
@@ -255,7 +263,7 @@ export const test = base.extend<{
           }
         })
 
-        await use({ page, emitJournal, lines, freezeReads, unfreezeReads })
+        await use({ page, emitJournal, lines, requests, freezeReads, unfreezeReads })
       }
     })
 

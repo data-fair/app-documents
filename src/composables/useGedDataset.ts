@@ -1,6 +1,6 @@
 import { ref, watch } from 'vue'
 import { ofetch } from 'ofetch'
-import { buildDatasetSchema, metadataKeyError } from '@/assets/ged'
+import { buildDatasetSchema, mergeDatasetSchema, metadataKeyError } from '@/assets/ged'
 import { useConfig } from './config'
 import { sendUiNotif } from './ui-notif'
 
@@ -34,16 +34,7 @@ export function useGedDataset () {
     if (!dataset?.href || !dataset.managedByApp) return
     try {
       const current = await ofetch<{ schema?: { key: string }[] }>(dataset.href, { query: { select: 'schema' } })
-      const schema = [...(current.schema ?? [])]
-      const keys = new Set(schema.map(f => f.key))
-      let changed = false
-      for (const field of buildDatasetSchema(config.metadata.value)) {
-        if (!keys.has(field.key)) {
-          schema.push(field)
-          keys.add(field.key)
-          changed = true
-        }
-      }
+      const { schema, changed } = mergeDatasetSchema(current.schema ?? [], buildDatasetSchema(config.metadata.value))
       if (!changed) return
       await ofetch(dataset.href, { method: 'PATCH', body: { schema } })
     } catch (e) {

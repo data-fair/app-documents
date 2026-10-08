@@ -26,6 +26,34 @@ export interface ConfigState {
   error: Ref<string | null>
 }
 
+export function setByPath (obj: Record<string, unknown>, path: string, value: unknown) {
+  const keys = path.split('.')
+  let current: any = obj
+  for (let i = 0; i < keys.length - 1; i++) {
+    const key = keys[i]
+    if (!(key in current) || typeof current[key] !== 'object' || current[key] === null) {
+      current[key] = {}
+    } else {
+      current[key] = Array.isArray(current[key]) ? [...current[key]] : { ...current[key] }
+    }
+    current = current[key]
+  }
+  current[keys[keys.length - 1]] = value
+}
+
+// interprète un message "set-config" reçu du parent et retourne la nouvelle configuration, ou null
+export function resolveConfigMessage (config: any, content: any): any | null {
+  if (!content) return null
+  if (content.configuration) return content.configuration
+  if (content.datasets) return { ...config, ...content }
+  if (content.field && 'value' in content) {
+    const newConfig = JSON.parse(JSON.stringify(config))
+    setByPath(newConfig, content.field, content.value)
+    return newConfig
+  }
+  return null
+}
+
 export function createConfig () {
   const application = window.APPLICATION as Application & { href: string }
   const config = ref<any>(application?.configuration || {})
@@ -76,21 +104,6 @@ export function createConfig () {
     }
   }
 
-  function setByPath (obj: Record<string, unknown>, path: string, value: unknown) {
-    const keys = path.split('.')
-    let current: any = obj
-    for (let i = 0; i < keys.length - 1; i++) {
-      const key = keys[i]
-      if (!(key in current) || typeof current[key] !== 'object' || current[key] === null) {
-        current[key] = {}
-      } else {
-        current[key] = Array.isArray(current[key]) ? [...current[key]] : { ...current[key] }
-      }
-      current = current[key]
-    }
-    current[keys[keys.length - 1]] = value
-  }
-
   return {
     install (app: App) {
       app.provide('data-fair-app-config', {
@@ -109,17 +122,9 @@ export function createConfig () {
       })
 
       window.addEventListener('message', (event) => {
-        if (event.data?.type === 'set-config' && event.data?.content) {
-          const { content } = event.data
-          if (content.configuration) {
-            applyConfig(content.configuration)
-          } else if (content.datasets) {
-            applyConfig({ ...config.value, ...content })
-          } else if (content.field && 'value' in content) {
-            const newConfig = JSON.parse(JSON.stringify(config.value))
-            setByPath(newConfig, content.field, content.value)
-            applyConfig(newConfig)
-          }
+        if (event.data?.type === 'set-config') {
+          const next = resolveConfigMessage(config.value, event.data.content)
+          if (next) applyConfig(next)
         }
       })
     }

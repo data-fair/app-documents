@@ -47,6 +47,22 @@ export function buildDatasetSchema (metadata: MetadataField[] = []): GedSchemaFi
   return [...TECHNICAL_FIELDS, ...metadata.map(metadataToSchemaField)]
 }
 
+// fusion additive d'un schéma existant avec le schéma désiré : on ajoute les colonnes manquantes,
+// on n'en supprime jamais (pas de perte de données)
+export function mergeDatasetSchema (current: GedSchemaField[] = [], desired: GedSchemaField[] = []): { schema: GedSchemaField[], changed: boolean } {
+  const schema = [...current]
+  const keys = new Set(schema.map(f => f.key))
+  let changed = false
+  for (const field of desired) {
+    if (!keys.has(field.key)) {
+      schema.push(field)
+      keys.add(field.key)
+      changed = true
+    }
+  }
+  return { schema, changed }
+}
+
 // champs interrogés par la recherche plein-texte : le nom et les métadonnées textuelles
 export function searchableFields (metadata: MetadataField[] = []): string[] {
   return ['nom', ...metadata.filter(f => f.searchable !== false && f.type !== 'boolean' && f.type !== 'date').map(f => f.key)]

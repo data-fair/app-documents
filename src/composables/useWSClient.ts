@@ -9,6 +9,24 @@ export interface WsEvent {
 
 type EventFilter = (event: WsEvent) => boolean
 
+// séquence de journal attendue pour considérer une indexation terminée (lue de la fin vers le début)
+export const JOURNAL_SEQUENCE = ['finalize-end', 'finalize-start', 'index-end', 'index-start']
+
+export interface JournalState {
+  buffer: string[]
+  matched: boolean
+  error: boolean
+}
+
+// état suivant de l'attente de journal : on dépile un événement attendu, on signale un match ou une erreur
+export function nextJournalBuffer (buffer: string[], event: WsEvent): JournalState {
+  if (event.data === undefined) return { buffer, matched: false, error: event.type === 'error' }
+  const expected = buffer[buffer.length - 1]
+  if (buffer.length === 1) return { buffer, matched: event.data.type === expected, error: false }
+  if (event.data.type === expected) return { buffer: buffer.slice(0, -1), matched: false, error: false }
+  return { buffer, matched: false, error: false }
+}
+
 class WSClient {
   private channels: string[] = []
   private ws: ReconnectingWebSocket | null = null
@@ -50,23 +68,14 @@ class WSClient {
   async waitForJournal (datasetId: string) {
     const channel = `datasets/${datasetId}/journal`
     await this.subscribe(channel)
-    const bufferEvent = ['finalize-end', 'finalize-start', 'index-end', 'index-start']
     // force journal to wait this sequence, we cant just wait the eventType finalize-end
     // because sometimes, new indexation is started just before receiving a finalize-end from a previous request
     // it cause an early stop of waitJournal and the new indexation is not considered
+    let buffer = [...JOURNAL_SEQUENCE]
     const event = await this.waitFor(channel, (e) => {
-      const n = bufferEvent.length - 1
-      const eventType = bufferEvent[bufferEvent.length - 1]
-      if (e.data !== undefined) {
-        if (e.data.type === eventType && n > 0) {
-          bufferEvent.pop()
-          return false
-        } else if (n === 0) {
-          return e.data.type === eventType
-        }
-        return false
-      }
-      return e.type === 'error'
+      const state = nextJournalBuffer(buffer, e)
+      buffer = state.buffer
+      return state.error || state.matched
     })
     if (event.type === 'error') throw new Error('Erreur indexation')
   }

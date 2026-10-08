@@ -131,12 +131,76 @@ test('recherche un document dans toute larborescence', async ({ ged }) => {
   await expect(page.locator('tbody tr', { hasText: 'rapport.pdf' })).toBeVisible()
 })
 
-test('affiche les champs de métadonnées à lédition dun document', async ({ ged }) => {
+test('écrit les métadonnées à la création dun fichier', async ({ ged }) => {
+  const { page, requests } = ged
+  await page.goto('/')
+  await page.locator('.mdi-file-plus-outline').click()
+  await page.getByLabel('Nom').fill('avec-meta.txt')
+  await page.locator('.v-overlay input[type="file"]').setInputFiles({
+    name: 'avec-meta.txt',
+    mimeType: 'text/plain',
+    buffer: Buffer.from('x')
+  })
+  await page.getByLabel('Auteur').fill('Dupont')
+  await page.getByRole('button', { name: 'Ajouter fichier', exact: true }).click()
+  await expect.poll(() => requests.some(r =>
+    r.method === 'POST' && r.suffix === '/lines' &&
+    (r.body ?? '').includes('name="auteur"') && (r.body ?? '').includes('Dupont')
+  )).toBe(true)
+})
+
+test('modifie les métadonnées dun document', async ({ ged }) => {
+  const { page, requests } = ged
+  await page.goto('/')
+  const row = page.locator('tbody tr', { hasText: 'rapport.pdf' })
+  await row.locator('.mdi-pencil').click()
+  await page.getByLabel('Auteur').fill('Martin')
+  await page.getByRole('button', { name: 'Modifier', exact: true }).click()
+  await expect.poll(() => requests.some(r =>
+    r.method === 'PATCH' && r.suffix === '/lines/file1' &&
+    (r.body ?? '').includes('name="auteur"') && (r.body ?? '').includes('Martin')
+  )).toBe(true)
+})
+
+test('renomme un fichier', async ({ ged }) => {
   const { page } = ged
   await page.goto('/')
   const row = page.locator('tbody tr', { hasText: 'rapport.pdf' })
   await row.locator('.mdi-pencil').click()
-  await expect(page.getByLabel('Auteur')).toBeVisible()
+  await page.getByLabel('Nouveau nom (facultatif)').fill('rapport-v2.pdf')
+  await page.getByRole('button', { name: 'Modifier', exact: true }).click()
+  await expect(page.locator('tbody tr', { hasText: 'rapport-v2.pdf' })).toBeVisible()
+})
+
+test('renomme un dossier et son contenu', async ({ ged }) => {
+  const { page } = ged
+  await page.goto('/')
+  const row = page.locator('tbody tr', { hasText: 'docs' })
+  await row.locator('.mdi-pencil').click()
+  await page.getByLabel('Nouveau nom', { exact: true }).fill('archives')
+  await page.getByRole('button', { name: 'Modifier', exact: true }).click()
+  await expect(page.locator('tbody tr', { hasText: 'archives' })).toBeVisible()
+  await expect(page.locator('tbody tr', { hasText: 'notes.txt' })).toHaveCount(0)
+})
+
+test('ouvre le dossier dun résultat de recherche', async ({ ged }) => {
+  const { page } = ged
+  await page.goto('/')
+  await page.getByPlaceholder('Rechercher').fill('notes')
+  const row = page.locator('tbody tr', { hasText: 'notes.txt' })
+  await expect(row).toBeVisible()
+  await row.getByRole('button', { name: '/docs/' }).click()
+  await expect(page).toHaveURL(/path=%2Fdocs%2F/)
+  await expect(page.locator('tbody tr', { hasText: 'notes.txt' })).toBeVisible()
+  await expect(page.locator('tbody tr', { hasText: 'rapport.pdf' })).toHaveCount(0)
+})
+
+test('télécharge un fichier', async ({ ged }) => {
+  const { page, requests } = ged
+  await page.goto('/')
+  const row = page.locator('tbody tr', { hasText: 'rapport.pdf' })
+  await row.locator('.mdi-download').click()
+  await expect.poll(() => requests.some(r => r.method === 'GET' && r.suffix.startsWith('/attachments/'))).toBe(true)
 })
 
 test('affiche lhistorique des révisions dun fichier', async ({ ged }) => {

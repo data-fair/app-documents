@@ -3,6 +3,7 @@ import {
   ATTACHMENT_FIELD_KEY,
   buildDatasetSchema,
   buildSearchQuery,
+  mergeDatasetSchema,
   metadataKeyError,
   metadataToSchemaField,
   searchableFields
@@ -53,6 +54,34 @@ test.describe('buildSearchQuery', () => {
       q: 'rapport',
       q_fields: 'nom,auteur'
     })
+  })
+
+  test('nettoie une recherche vide', () => {
+    expect(buildSearchQuery('   ')).toEqual({ q: '', q_fields: 'nom' })
+  })
+})
+
+test.describe('mergeDatasetSchema', () => {
+  test('ajoute les colonnes manquantes', () => {
+    const { schema, changed } = mergeDatasetSchema(
+      [{ key: 'nom', type: 'string' }],
+      [{ key: 'nom', type: 'string' }, { key: 'auteur', type: 'string' }]
+    )
+    expect(changed).toBe(true)
+    expect(schema.map(f => f.key)).toEqual(['nom', 'auteur'])
+  })
+
+  test('ne change rien quand le schéma est complet', () => {
+    const current = [{ key: 'nom', type: 'string' }, { key: 'auteur', type: 'string' }]
+    const { schema, changed } = mergeDatasetSchema(current, [{ key: 'nom' }, { key: 'auteur' }])
+    expect(changed).toBe(false)
+    expect(schema).toEqual(current)
+  })
+
+  test('ne supprime jamais une colonne existante', () => {
+    const { schema, changed } = mergeDatasetSchema([{ key: 'ancien', type: 'string' }], [{ key: 'nouveau' }])
+    expect(changed).toBe(true)
+    expect(schema.map(f => f.key)).toEqual(['ancien', 'nouveau'])
   })
 })
 
