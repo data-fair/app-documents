@@ -24,6 +24,7 @@ export interface ConfigState {
   datasetUrl: Ref<string | undefined>
   finalizedAt: Ref<string | undefined>
   error: Ref<string | null>
+  accessKey: string | null
 }
 
 export function setByPath (obj: Record<string, unknown>, path: string, value: unknown) {
@@ -45,7 +46,7 @@ export function setByPath (obj: Record<string, unknown>, path: string, value: un
 export function resolveConfigMessage (config: any, content: any): any | null {
   if (!content) return null
   if (content.configuration) return content.configuration
-  if (content.datasets) return { ...config, ...content }
+  if (content.datasets || content.metadata) return { ...config, ...content }
   if (content.field && 'value' in content) {
     const newConfig = JSON.parse(JSON.stringify(config))
     setByPath(newConfig, content.field, content.value)
@@ -71,6 +72,9 @@ export function createConfig () {
   })
 
   const datasetUrl = computed(() => dataset.value?.href)
+  // key of a shared link, passed to the websocket so that its visitors get the application's permissions
+  const lastSegment = application?.exposedUrl?.split('/').pop()?.split('%3A')
+  const accessKey = lastSegment?.length === 2 ? lastSegment[0] : null
   const finalizedAt = computed(() => dataset.value?.finalizedAt)
 
   const error = computed(() => {
@@ -81,8 +85,6 @@ export function createConfig () {
 
   function applyConfig (newConfig: any) {
     config.value = newConfig
-    // useAppInfo lit window.APPLICATION.configuration : on garde les deux sources alignées
-    application.configuration = newConfig
   }
 
   function setConfig (newConfig: any) {
@@ -118,7 +120,8 @@ export function createConfig () {
         fields,
         datasetUrl,
         finalizedAt,
-        error
+        error,
+        accessKey
       })
 
       window.addEventListener('message', (event) => {

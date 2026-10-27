@@ -28,7 +28,7 @@ test.describe('metadataToSchemaField', () => {
   test('mappe les types vers le schéma data-fair', () => {
     expect(metadataToSchemaField({ key: 'a', title: 'A', type: 'number' })).toEqual({ key: 'a', title: 'A', type: 'number' })
     expect(metadataToSchemaField({ key: 'b', title: 'B', type: 'boolean' })).toEqual({ key: 'b', title: 'B', type: 'boolean' })
-    expect(metadataToSchemaField({ key: 'c', title: 'C', type: 'date' })).toEqual({ key: 'c', title: 'C', type: 'string', format: 'date-time' })
+    expect(metadataToSchemaField({ key: 'c', title: 'C', type: 'date' })).toEqual({ key: 'c', title: 'C', type: 'string', format: 'date' })
   })
 
   test('marque les champs obligatoires', () => {
@@ -37,14 +37,14 @@ test.describe('metadataToSchemaField', () => {
 })
 
 test.describe('searchableFields', () => {
-  test('inclut le nom et les métadonnées textuelles', () => {
+  test('inclut le nom, les métadonnées textuelles et le texte des fichiers', () => {
     const fields = searchableFields([
       { key: 'auteur', title: 'Auteur', type: 'string' },
       { key: 'montant', title: 'Montant', type: 'number' },
       { key: 'masque', title: 'Masqué', type: 'string', searchable: false },
       { key: 'paye', title: 'Payé', type: 'boolean' }
     ])
-    expect(fields).toEqual(['nom', 'auteur', 'montant'])
+    expect(fields).toEqual(['nom', 'auteur', 'montant', '_file.content'])
   })
 })
 
@@ -52,12 +52,12 @@ test.describe('buildSearchQuery', () => {
   test('construit la requête plein-texte', () => {
     expect(buildSearchQuery('  rapport  ', [{ key: 'auteur', title: 'Auteur' }])).toEqual({
       q: 'rapport',
-      q_fields: 'nom,auteur'
+      q_fields: 'nom,auteur,_file.content'
     })
   })
 
   test('nettoie une recherche vide', () => {
-    expect(buildSearchQuery('   ')).toEqual({ q: '', q_fields: 'nom' })
+    expect(buildSearchQuery('   ')).toEqual({ q: '', q_fields: 'nom,_file.content' })
   })
 })
 

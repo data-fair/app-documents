@@ -23,20 +23,18 @@
     "dist"
   ],
   "dependencies": {
-    "@data-fair/lib-utils": "^1.13.1",
-    "@data-fair/lib-vue": "^1.30.1",
-    "@data-fair/lib-vuetify": "^2.4.3",
-    "@mdi/font": "^7.4.47",
+    "@data-fair/lib-utils": "^1.14.1",
+    "@data-fair/lib-vue": "^1.33.0",
+    "@data-fair/lib-vuetify": "^2.5.3",
+    "@mdi/js": "^7.4.47",
     "@vueuse/core": "^14.4.0",
-    "axios": "^1.20.0",
     "dayjs": "^1.11.23",
-    "file-saver": "^2.0.5",
     "ofetch": "^1.5.1",
     "reconnecting-websocket": "^4.4.0",
     "vue": "^3.5.42",
     "vue-i18n": "^11.4.10",
     "vue-router": "^4.6.4",
-    "vuetify": "^4.2.0"
+    "vuetify": "~4.2.6"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
@@ -46,7 +44,6 @@
     "@data-fair/lib-types-builder": "^1.14.3",
     "@intlify/unplugin-vue-i18n": "^11.2.5",
     "@playwright/test": "^1.63.0",
-    "@types/file-saver": "^2.0.7",
     "@types/node": "^24.10.1",
     "@typescript-eslint/parser": "^8.69.0",
     "@vitejs/plugin-vue": "^6.0.8",

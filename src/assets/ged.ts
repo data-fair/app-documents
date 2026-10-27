@@ -6,6 +6,7 @@ export interface MetadataField {
   type?: MetadataType
   required?: boolean
   searchable?: boolean
+  showInTable?: boolean
 }
 
 export interface GedSchemaField {
@@ -38,7 +39,7 @@ export function metadataToSchemaField (field: MetadataField): GedSchemaField {
   switch (field.type) {
     case 'number': return { ...base, type: 'number' }
     case 'boolean': return { ...base, type: 'boolean' }
-    case 'date': return { ...base, type: 'string', format: 'date-time' }
+    case 'date': return { ...base, type: 'string', format: 'date' }
     default: return { ...base, type: 'string' }
   }
 }
@@ -63,9 +64,9 @@ export function mergeDatasetSchema (current: GedSchemaField[] = [], desired: Ged
   return { schema, changed }
 }
 
-// champs interrogés par la recherche plein-texte : le nom et les métadonnées textuelles
+// full-text search fields: the name, the text metadata and the text data-fair extracts from the files
 export function searchableFields (metadata: MetadataField[] = []): string[] {
-  return ['nom', ...metadata.filter(f => f.searchable !== false && f.type !== 'boolean' && f.type !== 'date').map(f => f.key)]
+  return ['nom', ...metadata.filter(f => f.searchable !== false && f.type !== 'boolean' && f.type !== 'date').map(f => f.key), '_file.content']
 }
 
 export function buildSearchQuery (q: string, metadata: MetadataField[] = []) {

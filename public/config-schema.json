@@ -10,13 +10,14 @@
         "datasets": {
           "type": "array",
           "title": "Jeu de données",
-          "description": "Laisser vide : la GED crée et gère son propre jeu de données, fragment de l'application. Sélectionnez un jeu de données uniquement pour en réutiliser un existant, éditable (REST) et exposant une pièce jointe (concept attachment).",
+          "description": "Laisser vide : la GED crée et gère son propre jeu de données, rattaché à l'application. Attention, supprimer l'application supprime ce jeu de données et tous ses documents. Sélectionnez un jeu de données uniquement pour réutiliser une GED existante : éditable (REST), avec une pièce jointe et les colonnes path et nom.",
           "layout": {
             "getItems": {
-              "url": "api/v1/datasets?status=finalized&rest=true&short-concept=attachment&q={q}&select=id,title&size=100&${context.datasetFilter}",
+              "url": "api/v1/datasets?status=finalized&rest=true&short-concept=attachment&select=id,title&size=50&${context.datasetFilter}",
               "itemKey": "data.href",
               "itemTitle": "data.title",
-              "itemsResults": "data.results"
+              "itemsResults": "data.results",
+              "qSearchParam": "q"
             }
           },
           "items": {
@@ -65,11 +66,21 @@
                 "type": "string",
                 "title": "Identifiant technique",
                 "description": "Lettres, chiffres et tirets bas uniquement, sans accent ni espace.",
-                "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$"
+                "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+                "layout": {
+                  "cols": {
+                    "sm": 6
+                  }
+                }
               },
               "title": {
                 "type": "string",
-                "title": "Libellé"
+                "title": "Libellé",
+                "layout": {
+                  "cols": {
+                    "sm": 6
+                  }
+                }
               },
               "type": {
                 "type": "string",
@@ -86,24 +97,56 @@
                   },
                   {
                     "const": "boolean",
-                    "title": "Oui / Non"
+                    "title": "Booléen"
                   },
                   {
                     "const": "date",
                     "title": "Date"
                   }
-                ]
+                ],
+                "layout": {
+                  "cols": {
+                    "sm": 6
+                  }
+                }
               },
               "required": {
                 "type": "boolean",
                 "title": "Obligatoire",
-                "default": false
+                "default": false,
+                "layout": {
+                  "cols": {
+                    "xs": 6
+                  }
+                }
               },
               "searchable": {
                 "type": "boolean",
                 "title": "Inclus dans la recherche",
-                "default": true
+                "default": true,
+                "layout": {
+                  "cols": {
+                    "xs": 6
+                  },
+                  "if": "!parent.data.type || parent.data.type === 'string' || parent.data.type === 'number'"
+                }
+              },
+              "showInTable": {
+                "type": "boolean",
+                "title": "Afficher dans le tableau",
+                "default": true,
+                "layout": {
+                  "cols": {
+                    "xs": 6
+                  }
+                }
               }
+            }
+          },
+          "layout": {
+            "itemTitle": "data.title || data.key",
+            "messages": {
+              "addItem": "Ajouter un champ"
             }
           }
         }

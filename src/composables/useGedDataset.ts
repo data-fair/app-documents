@@ -1,8 +1,7 @@
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 import { ofetch } from 'ofetch'
-import { buildDatasetSchema, mergeDatasetSchema, metadataKeyError } from '@/assets/ged'
+import { buildDatasetSchema, mergeDatasetSchema, metadataKeyError, type GedSchemaField } from '@/assets/ged'
 import { useConfig } from './config'
-import { sendUiNotif } from './ui-notif'
 
 interface DatasetRef {
   id: string
@@ -10,94 +9,110 @@ interface DatasetRef {
   title?: string
 }
 
-// écrase la config du parent et récupère le jeu de données fragment de l'application GED
+export interface GedDatasetInfo {
+  schema?: GedSchemaField[]
+  rest?: { history?: boolean }
+}
+
+// takes over the parent's configuration and provides the GED dataset, a fragment of the application
 export function useGedDataset () {
   const config = useConfig()
-  const provisioning = ref(false)
   const provisionError = ref<string | null>(null)
-  let attempted = false
+  const datasetInfo = ref<GedDatasetInfo | null>(null)
+  const ready = ref(false)
+  let running = false
+  let again = false
+
+  function apiBase () {
+    return window.APPLICATION?.apiUrl ?? '/data-fair/api/v1'
+  }
 
   function adopt (dataset: DatasetRef) {
     config.setDataset({
       id: dataset.id,
       href: dataset.href ?? `${apiBase()}/datasets/${dataset.id}`,
       title: dataset.title,
-      applicationKeyPermissions: { classes: ['read', 'write'] },
+      applicationKeyPermissions: { classes: ['read', 'write'], operations: ['realtime-journal'] },
       managedByApp: true
     })
   }
 
-  // ajoute au jeu de données géré par l'application les colonnes de métadonnées manquantes
-  // (jamais de suppression de colonne : on ne veut pas perdre de données)
+  async function loadInfo (href: string) {
+    return await ofetch<GedDatasetInfo>(href, { query: { select: 'schema,rest' } })
+  }
+
+  // adds the missing metadata columns to the dataset managed by the application, never removes one
   async function syncSchema () {
     const dataset = config.dataset.value as { href?: string, managedByApp?: boolean } | undefined
-    if (!dataset?.href || !dataset.managedByApp) return
-    try {
-      const current = await ofetch<{ schema?: { key: string }[] }>(dataset.href, { query: { select: 'schema' } })
-      const { schema, changed } = mergeDatasetSchema(current.schema ?? [], buildDatasetSchema(config.metadata.value))
-      if (!changed) return
-      await ofetch(dataset.href, { method: 'PATCH', body: { schema } })
-    } catch (e) {
-      sendUiNotif({ type: 'error', msg: 'Erreur lors de la synchronisation du schéma', error: e })
-    }
+    if (!dataset?.href || !dataset.managedByApp || !datasetInfo.value) return
+    const { schema, changed } = mergeDatasetSchema(datasetInfo.value.schema ?? [], buildDatasetSchema(config.metadata.value))
+    if (!changed) return
+    await ofetch(dataset.href, { method: 'PATCH', body: { schema } })
+    datasetInfo.value = { ...datasetInfo.value, schema }
   }
 
-  watch(config.metadata, () => { syncSchema().catch(() => {}) }, { deep: true })
-
-  function apiBase () {
-    const application = window.APPLICATION as { apiUrl?: string } | undefined
-    return application?.apiUrl ?? '/data-fair/api/v1'
-  }
-
-  async function ensureDataset () {
-    if (config.dataset.value) return
-    if (attempted) return
+  async function provision () {
     const application = window.APPLICATION
     if (!application?.id || !application.owner) return
     const keyError = metadataKeyError(config.metadata.value)
-    if (keyError) {
-      provisionError.value = keyError
+    if (keyError) throw new Error(keyError)
+    // a failed lookup is an error, not an absence: it must not create a second dataset
+    const existing = await ofetch<{ results: DatasetRef[] }>(`${apiBase()}/datasets`, {
+      query: { partOf: `application:${application.id}`, select: 'id,href,title', size: 1 }
+    })
+    const found = existing.results?.[0] ?? await ofetch<DatasetRef>(`${apiBase()}/datasets`, {
+      method: 'POST',
+      body: {
+        title: `${application.title || 'Documents'} - GED`,
+        isRest: true,
+        rest: { history: true },
+        schema: buildDatasetSchema(config.metadata.value),
+        partOf: { type: 'application', id: application.id },
+        owner: {
+          type: application.owner.type,
+          id: application.owner.id,
+          name: (application.owner as { name?: string }).name ?? application.owner.id,
+          ...(application.owner.department ? { department: application.owner.department } : {})
+        }
+      }
+    })
+    adopt(found)
+  }
+
+  async function ensureDataset () {
+    // a dataset switched in the draft while loading is loaded right after
+    if (running) {
+      again = true
       return
     }
-    attempted = true
-    provisioning.value = true
+    running = true
     provisionError.value = null
+    datasetInfo.value = null
+    ready.value = false
     try {
-      const existing = await ofetch<{ results: DatasetRef[] }>(`${apiBase()}/datasets`, {
-        query: { partOf: `application:${application.id}`, select: 'id,href,title', size: 1 }
-      }).catch(() => null)
-      const found = existing?.results?.[0]
-      if (found) {
-        adopt(found)
-        await syncSchema()
-        return
+      const dataset = config.dataset.value as { href?: string } | undefined
+      if (dataset?.href) {
+        datasetInfo.value = await loadInfo(dataset.href).catch(() => null)
+      } else {
+        await provision()
+        const href = (config.dataset.value as { href?: string } | undefined)?.href
+        if (href) datasetInfo.value = await loadInfo(href)
       }
-      const created = await ofetch<DatasetRef>(`${apiBase()}/datasets`, {
-        method: 'POST',
-        body: {
-          title: `${application.title || 'Documents'} - GED`,
-          isRest: true,
-          rest: { history: true },
-          schema: buildDatasetSchema(config.metadata.value),
-          partOf: { type: 'application', id: application.id },
-          owner: {
-            type: application.owner.type,
-            id: application.owner.id,
-            ...(application.owner.department ? { department: application.owner.department } : {})
-          }
-        }
-      })
-      adopt(created)
+      await syncSchema()
     } catch (e) {
-      attempted = false
-      provisionError.value = e instanceof Error ? e.message : 'Erreur lors de la création du jeu de données'
-      sendUiNotif({ type: 'error', msg: provisionError.value, error: e })
+      provisionError.value = e instanceof Error ? e.message : String(e)
     } finally {
-      provisioning.value = false
+      running = false
+      ready.value = true
+    }
+    if (again) {
+      again = false
+      await ensureDataset()
     }
   }
 
-  return { provisioning, provisionError, ensureDataset }
+  // the schema is synced on load only: syncing the draft while a key is typed would add a column per keystroke
+  return { provisionError, datasetInfo, ready, ensureDataset }
 }
 
 export default useGedDataset

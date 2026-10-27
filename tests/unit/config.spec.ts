@@ -35,3 +35,7 @@ test.describe('resolveConfigMessage', () => {
     expect(resolveConfigMessage({ a: 1 }, { foo: 'bar' })).toBeNull()
   })
 })
+
+test('fusionne un correctif de métadonnées seul', () => {
+  expect(resolveConfigMessage({ datasets: [] }, { metadata: [{ key: 'auteur' }] })).toEqual({ datasets: [], metadata: [{ key: 'auteur' }] })
+})
