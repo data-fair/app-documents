@@ -96,6 +96,37 @@ test('remplace un fichier déposé en doublon puis refuse un doublon via le menu
   await expect(page.getByText('Erreur : le fichier est deja présent').first()).toBeVisible()
 })
 
+test('remplace un fichier en suivant le nouveau nom et le nombre de révisions', async ({ ged }) => {
+  const { page } = ged
+  await page.goto('/')
+  await page.locator('.mdi-file-plus-outline').click()
+  await page.locator('.v-overlay input[type="file"]').setInputFiles({
+    name: 'note.md',
+    mimeType: 'text/markdown',
+    buffer: Buffer.from('# note')
+  })
+  await page.getByRole('button', { name: 'Ajouter fichier', exact: true }).click()
+  const row = page.locator('tbody tr', { hasText: 'note.md' })
+  await expect(row).toBeVisible()
+  await expect(row.locator('td').nth(2)).toHaveText('0')
+
+  await row.locator('.mdi-pencil').click()
+  await page.locator('.v-overlay input[type="file"]').setInputFiles({
+    name: 'note.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from('png')
+  })
+  await page.getByRole('button', { name: 'Modifier', exact: true }).click()
+  const updated = page.locator('tbody tr', { hasText: 'note.png' })
+  await expect(updated).toBeVisible()
+  await expect(page.locator('tbody tr', { hasText: 'note.md' })).toHaveCount(0)
+  await expect(updated.locator('td').nth(2)).toHaveText('1')
+
+  const downloadPromise = page.waitForEvent('download')
+  await updated.locator('.mdi-download').click()
+  expect((await downloadPromise).suggestedFilename()).toBe('note.png')
+})
+
 test('supprime un fichier après confirmation', async ({ ged }) => {
   const { page } = ged
   await page.goto('/')

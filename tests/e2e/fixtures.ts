@@ -179,7 +179,7 @@ export const test = base.extend<{
               type_mime: multipartField(data, 'type_mime') ?? '',
               datecreation: multipartField(data, 'datecreation') ?? new Date().toISOString(),
               datemodification: new Date().toISOString(),
-              nbrevisions: isUpdate ? Number(multipartField(data, 'nbrevisions') ?? '1') : 1
+              nbrevisions: isUpdate ? Number(multipartField(data, 'nbrevisions') ?? '1') : 0
             }
             if (isUpdate && existing) {
               Object.assign(existing, line)
