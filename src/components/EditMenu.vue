@@ -1,11 +1,12 @@
 <script setup lang="ts">
+import type { DocumentLine } from '@/assets/documents'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { mdiPaperclip } from '@mdi/js'
 import { useAsyncAction } from '@data-fair/lib-vue/async-action.js'
 import { useConfig } from '@/composables/config'
 import { useDocuments } from '@/composables/documents'
-import { nameAfterReplace, type DocumentLine } from '@/assets/documents'
+import { nameAfterReplace } from '@/assets/documents'
 import ActionMenu from './ActionMenu.vue'
 import MetadataFields from './MetadataFields.vue'
 

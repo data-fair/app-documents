@@ -1,6 +1,7 @@
-import { computed, inject, ref, type App, type Ref } from 'vue'
+import type { App, Ref } from 'vue'
 import type { Application, Dataset, Field } from '@data-fair/lib-common-types/application/index.js'
 import type { MetadataField } from '@/assets/ged'
+import { computed, inject, ref } from 'vue'
 
 export interface GedDataset {
   id?: string
@@ -42,7 +43,7 @@ export function setByPath (obj: Record<string, unknown>, path: string, value: un
   current[keys[keys.length - 1]] = value
 }
 
-// interprète un message "set-config" reçu du parent et retourne la nouvelle configuration, ou null
+// interprets a "set-config" message received from the parent and returns the new configuration, or null
 export function resolveConfigMessage (config: any, content: any): any | null {
   if (!content) return null
   if (content.configuration) return content.configuration
@@ -91,7 +92,7 @@ export function createConfig () {
     applyConfig(newConfig)
   }
 
-  // adoption du jeu de données créé ou trouvé : on met à jour la config locale et on la remonte au parent
+  // adopts the created or found dataset: updates the local config and sends it up to the parent
   function setDataset (dataset: GedDataset) {
     applyConfig({ ...config.value, datasets: [dataset] })
     notifyConfigChange('datasets', [dataset])

@@ -10,7 +10,7 @@ import {
 } from '../../src/assets/ged'
 
 test.describe('buildDatasetSchema', () => {
-  test('ajoute les colonnes techniques et la pièce jointe', () => {
+  test('adds the technical columns and the attachment', () => {
     const schema = buildDatasetSchema()
     const keys = schema.map(f => f.key)
     expect(keys).toEqual(['path', 'nom', 'type_mime', 'taille', 'nbrevisions', 'datecreation', 'datemodification', ATTACHMENT_FIELD_KEY])
@@ -18,26 +18,26 @@ test.describe('buildDatasetSchema', () => {
     expect(attachment?.['x-refersTo']).toBe('http://schema.org/DigitalDocument')
   })
 
-  test('ajoute les champs de métadonnées configurés', () => {
+  test('adds the configured metadata fields', () => {
     const schema = buildDatasetSchema([{ key: 'auteur', title: 'Auteur' }])
     expect(schema.at(-1)).toMatchObject({ key: 'auteur', title: 'Auteur', type: 'string' })
   })
 })
 
 test.describe('metadataToSchemaField', () => {
-  test('mappe les types vers le schéma data-fair', () => {
+  test('maps the types to the data-fair schema', () => {
     expect(metadataToSchemaField({ key: 'a', title: 'A', type: 'number' })).toEqual({ key: 'a', title: 'A', type: 'number' })
     expect(metadataToSchemaField({ key: 'b', title: 'B', type: 'boolean' })).toEqual({ key: 'b', title: 'B', type: 'boolean' })
     expect(metadataToSchemaField({ key: 'c', title: 'C', type: 'date' })).toEqual({ key: 'c', title: 'C', type: 'string', format: 'date' })
   })
 
-  test('marque les champs obligatoires', () => {
+  test('marks the required fields', () => {
     expect(metadataToSchemaField({ key: 'a', title: 'A', required: true })).toMatchObject({ 'x-required': true })
   })
 })
 
 test.describe('searchableFields', () => {
-  test('inclut le nom, les métadonnées textuelles et le texte des fichiers', () => {
+  test('includes the name, the text metadata and the text of the files', () => {
     const fields = searchableFields([
       { key: 'auteur', title: 'Auteur', type: 'string' },
       { key: 'montant', title: 'Montant', type: 'number' },
@@ -49,20 +49,20 @@ test.describe('searchableFields', () => {
 })
 
 test.describe('buildSearchQuery', () => {
-  test('construit la requête plein-texte', () => {
+  test('builds the full-text query', () => {
     expect(buildSearchQuery('  rapport  ', [{ key: 'auteur', title: 'Auteur' }])).toEqual({
       q: 'rapport',
       q_fields: 'nom,auteur,_file.content'
     })
   })
 
-  test('nettoie une recherche vide', () => {
+  test('cleans an empty search', () => {
     expect(buildSearchQuery('   ')).toEqual({ q: '', q_fields: 'nom,_file.content' })
   })
 })
 
 test.describe('mergeDatasetSchema', () => {
-  test('ajoute les colonnes manquantes', () => {
+  test('adds the missing columns', () => {
     const { schema, changed } = mergeDatasetSchema(
       [{ key: 'nom', type: 'string' }],
       [{ key: 'nom', type: 'string' }, { key: 'auteur', type: 'string' }]
@@ -71,14 +71,14 @@ test.describe('mergeDatasetSchema', () => {
     expect(schema.map(f => f.key)).toEqual(['nom', 'auteur'])
   })
 
-  test('ne change rien quand le schéma est complet', () => {
+  test('changes nothing when the schema is complete', () => {
     const current = [{ key: 'nom', type: 'string' }, { key: 'auteur', type: 'string' }]
     const { schema, changed } = mergeDatasetSchema(current, [{ key: 'nom' }, { key: 'auteur' }])
     expect(changed).toBe(false)
     expect(schema).toEqual(current)
   })
 
-  test('ne supprime jamais une colonne existante', () => {
+  test('never removes an existing column', () => {
     const { schema, changed } = mergeDatasetSchema([{ key: 'ancien', type: 'string' }], [{ key: 'nouveau' }])
     expect(changed).toBe(true)
     expect(schema.map(f => f.key)).toEqual(['ancien', 'nouveau'])
@@ -86,15 +86,15 @@ test.describe('mergeDatasetSchema', () => {
 })
 
 test.describe('metadataKeyError', () => {
-  test('refuse une clé réservée', () => {
+  test('refuses a reserved key', () => {
     expect(metadataKeyError([{ key: 'path', title: 'Chemin' }])).toContain('réservée')
   })
 
-  test('refuse une clé en doublon', () => {
+  test('refuses a duplicate key', () => {
     expect(metadataKeyError([{ key: 'a', title: 'A' }, { key: 'a', title: 'B' }])).toContain('plusieurs fois')
   })
 
-  test('accepte des clés valides', () => {
+  test('accepts valid keys', () => {
     expect(metadataKeyError([{ key: 'auteur', title: 'Auteur' }])).toBeNull()
   })
 })

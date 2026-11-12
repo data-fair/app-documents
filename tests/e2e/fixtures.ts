@@ -1,7 +1,8 @@
 // Shared base of the e2e suite: console guard, session mocks, window.APPLICATION, and an in-memory
 // REST dataset that follows data-fair's behaviour (default page of 12, exact/prefix filters, values
 // aggregation, bulk actions, patch merges, a revision per write). Specs import `test` and `expect` from here.
-import { test as base, expect, type Page, type Route } from '@playwright/test'
+import type { Page, Route } from '@playwright/test'
+import { test as base, expect } from '@playwright/test'
 
 export interface MockLine {
   _id: string

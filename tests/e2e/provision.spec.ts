@@ -1,5 +1,5 @@
-import { test, expect, mockApplication, mockSite } from './fixtures'
 import type { Page } from '@playwright/test'
+import { test, expect, mockApplication, mockSite } from './fixtures'
 
 const created = { id: 'ged-auto', href: '/data-fair/api/v1/datasets/ged-auto', title: 'GED test - GED' }
 
@@ -22,7 +22,7 @@ async function mockDatasets (page: Page, options: { existing?: { id: string, hre
   return calls
 }
 
-test('crée le jeu de données fragment de lapplication et complète son schéma', async ({ page }) => {
+test('creates the application fragment dataset and completes its schema', async ({ page }) => {
   await mockSite(page)
   const calls = await mockDatasets(page)
   await mockApplication(page, { metadata: [{ key: 'auteur', title: 'Auteur', type: 'string' }] })
@@ -37,7 +37,7 @@ test('crée le jeu de données fragment de lapplication et complète son schéma
   expect(calls.patch.schema.map((f: any) => f.key)).toEqual(expect.arrayContaining(['path', 'nom', 'auteur']))
 })
 
-test('réutilise le fragment existant de lapplication', async ({ page }) => {
+test('reuses the existing application fragment', async ({ page }) => {
   await mockSite(page)
   const calls = await mockDatasets(page, { existing: { id: 'ged-existing', href: '/data-fair/api/v1/datasets/ged-existing', title: 'GED existante' } })
   await mockApplication(page, {})
@@ -46,9 +46,9 @@ test('réutilise le fragment existant de lapplication', async ({ page }) => {
   expect(calls.post).toBeNull()
 })
 
-test.describe('échec du provisionnement', () => {
+test.describe('provisioning failure', () => {
   test.use({ expectedConsole: ['status of 403'] })
-  test('affiche lerreur et propose de réessayer', async ({ page }) => {
+  test('displays the error and offers to retry', async ({ page }) => {
     await mockSite(page)
     await mockDatasets(page, { postStatus: 403 })
     await mockApplication(page, {})
@@ -58,7 +58,7 @@ test.describe('échec du provisionnement', () => {
   })
 })
 
-test('signale un jeu de données choisi qui na pas les colonnes de la GED', async ({ page }) => {
+test('reports a chosen dataset that lacks the GED columns', async ({ page }) => {
   await mockSite(page)
   await page.route('**/data-fair/api/v1/datasets/autre**', route => route.fulfill({ json: { schema: [{ key: 'titre' }], rest: {} } }))
   await mockApplication(page, { datasets: [{ id: 'autre', href: '/data-fair/api/v1/datasets/autre' }] })

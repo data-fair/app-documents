@@ -1,15 +1,27 @@
-import { computed, inject, onScopeDispose, provide, reactive, ref, watch, type InjectionKey } from 'vue'
+import type { InjectionKey } from 'vue'
+import type { GedDatasetInfo } from './useGedDataset'
+import type {
+  DocumentLine,
+  LinesResponse,
+  Row
+} from '@/assets/documents'
+import { computed, inject, onScopeDispose, provide, reactive, ref, watch } from 'vue'
 import { ofetch } from 'ofetch'
 import { useDebounce } from '@vueuse/core'
 import { useFetch } from '@data-fair/lib-vue/fetch.js'
 import { useWS } from '@data-fair/lib-vue/ws.js'
 import reactiveSearchParams from '@data-fair/lib-vue/reactive-search-params-global.js'
 import { useConfig } from './config'
-import type { GedDatasetInfo } from './useGedDataset'
 import { buildSearchQuery } from '@/assets/ged'
 import {
-  FOLDER_MIME, buildRows, buildSearchRows, childPath, isFolderLine, nameAfterReplace, normalizePath, subFolderNames,
-  type DocumentLine, type LinesResponse, type Row
+  FOLDER_MIME,
+  buildRows,
+  buildSearchRows,
+  childPath,
+  isFolderLine,
+  nameAfterReplace,
+  normalizePath,
+  subFolderNames
 } from '@/assets/documents'
 
 export const SEARCH_SIZE = 100

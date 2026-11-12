@@ -1,3 +1,7 @@
+import type {
+  DocumentLine,
+  Revision
+} from '../../src/assets/documents'
 import { test, expect } from '@playwright/test'
 import * as mdi from '@mdi/js'
 import {
@@ -12,30 +16,28 @@ import {
   normalizePath,
   parentPath,
   pathAt,
-  subFolderNames,
-  type DocumentLine,
-  type Revision
+  subFolderNames
 } from '../../src/assets/documents'
 
 const file = (nom: string, extra: Partial<DocumentLine> = {}): DocumentLine => ({ _id: nom, nom, path: '/', attachmentPath: `${nom}/h/${nom}`, ...extra })
 const folder = (nom: string, path = '/'): DocumentLine => ({ _id: `f-${nom}`, nom, path, type_mime: '_folder' })
 
-test.describe('chemins', () => {
-  test('normalise un chemin venu de lurl', () => {
+test.describe('paths', () => {
+  test('normalizes a path coming from the url', () => {
     expect(normalizePath(undefined)).toBe('/')
     expect(normalizePath('')).toBe('/')
     expect(normalizePath('docs')).toBe('/docs/')
     expect(normalizePath('//docs//2024')).toBe('/docs/2024/')
   })
 
-  test('remonte le fil dariane par position, même avec des noms répétés', () => {
+  test('goes up the breadcrumb by position, even with repeated names', () => {
     expect(pathAt('/a/b/a/', 0)).toBe('/a/')
     expect(pathAt('/a/b/a/', 1)).toBe('/a/b/')
     expect(pathAt('/a/b/a/', 2)).toBe('/a/b/a/')
     expect(pathAt('/a/b/a/', -1)).toBe('/')
   })
 
-  test('calcule le dossier enfant et le dossier parent', () => {
+  test('computes the child folder and the parent folder', () => {
     expect(childPath('/', 'docs')).toBe('/docs/')
     expect(childPath('/docs/', '2024')).toBe('/docs/2024/')
     expect(parentPath('/docs/2024/')).toBe('/docs/')
@@ -44,18 +46,18 @@ test.describe('chemins', () => {
 })
 
 test.describe('subFolderNames', () => {
-  test('déduit les sous-dossiers directs des chemins descendants', () => {
+  test('infers the direct sub-folders from the descendant paths', () => {
     expect(subFolderNames(['/', '/docs/', '/docs/2024/', '/photos/'], '/').sort()).toEqual(['docs', 'photos'])
     expect(subFolderNames(['/docs/', '/docs/2024/', '/docs/2024/mars/'], '/docs/')).toEqual(['2024'])
   })
 
-  test('ignore le dossier courant et les chemins hors du dossier', () => {
+  test('ignores the current folder and the paths outside the folder', () => {
     expect(subFolderNames(['/docs/', '/autre/'], '/docs/')).toEqual([])
   })
 })
 
 test.describe('buildRows', () => {
-  test('liste les dossiers avant les fichiers, sans doublon entre dossier explicite et déduit', () => {
+  test('lists folders before files, without duplicates between explicit and implied folders', () => {
     const rows = buildRows([file('a.txt'), folder('docs'), file('b.txt')], ['docs', 'photos'], '/')
     expect(rows.map(r => r.kind === 'folder' ? `dir:${r.name}` : r.line.nom)).toEqual(['dir:docs', 'dir:photos', 'a.txt', 'b.txt'])
     expect(rows[0]).toMatchObject({ kind: 'folder', line: { _id: 'f-docs' } })
@@ -63,14 +65,14 @@ test.describe('buildRows', () => {
     expect(rows[1].kind === 'folder' && rows[1].line).toBeFalsy()
   })
 
-  test('garde lordre de data-fair pour les fichiers et trie les dossiers par nom', () => {
+  test('keeps the data-fair order for files and sorts folders by name', () => {
     const lines = [file('doc-10.pdf'), folder('b'), file('Doc-1.pdf'), folder('A'), file('doc-2.pdf')]
     expect(buildRows(lines, ['c'], '/').map(r => r.kind === 'folder' ? `dir:${r.name}` : r.line.nom))
       .toEqual(['dir:A', 'dir:b', 'dir:c', 'doc-10.pdf', 'Doc-1.pdf', 'doc-2.pdf'])
     expect(buildRows(lines, ['c'], '/', true).slice(0, 3).map(r => r.kind === 'folder' && r.name)).toEqual(['c', 'b', 'A'])
   })
 
-  test('garde les dossiers trouvés par une recherche', () => {
+  test('keeps the folders found by a search', () => {
     const rows = buildSearchRows([folder('docs', '/archives/'), file('a.txt')])
     expect(rows[0]).toMatchObject({ kind: 'folder', name: 'docs', path: '/archives/' })
     expect(rows[1].kind).toBe('file')
@@ -78,7 +80,7 @@ test.describe('buildRows', () => {
 })
 
 test.describe('folderNameError', () => {
-  test('refuse un nom vide, un slash ou un doublon', () => {
+  test('refuses an empty name, a slash or a duplicate', () => {
     expect(folderNameError('  ', [])).toBe('empty')
     expect(folderNameError('a/b', [])).toBe('slash')
     expect(folderNameError('docs ', ['docs'])).toBe('exists')
@@ -86,26 +88,26 @@ test.describe('folderNameError', () => {
   })
 })
 
-test.describe('noms de fichier', () => {
-  test('un nom jamais modifié suit le nouveau fichier', () => {
+test.describe('file names', () => {
+  test('a name never changed follows the new file', () => {
     expect(nameAfterReplace(file('note.md'), 'note.png')).toBe('note.png')
   })
 
-  test('un nom personnalisé est conservé', () => {
+  test('a custom name is kept', () => {
     expect(nameAfterReplace(file('note.md', { nom: 'Compte rendu' }), 'note.png')).toBe('Compte rendu')
   })
 
-  test('un nom saisi lemporte', () => {
+  test('a typed name wins', () => {
     expect(nameAfterReplace(file('note.md'), 'note.png', ' Nouveau nom ')).toBe('Nouveau nom')
   })
 
-  test('encode chaque segment de lurl de la pièce jointe', () => {
+  test('encodes each segment of the attachment url', () => {
     expect(attachmentUrl('/data-fair/api/v1/datasets/ged', 'id/h/a #1?.pdf')).toBe('/data-fair/api/v1/datasets/ged/attachments/id/h/a%20%231%3F.pdf')
   })
 })
 
 test.describe('fileVersions', () => {
-  test('ne garde que les révisions où le fichier change, datées de son dépôt', () => {
+  test('keeps only the revisions where the file changes, dated by its upload', () => {
     const revisions: Revision[] = [
       { ...file('v2.pdf'), attachmentPath: 'x/2/v2.pdf', _updatedAt: '2026-03-03', nom: 'renommé' },
       { ...file('v2.pdf'), attachmentPath: 'x/2/v2.pdf', _updatedAt: '2026-03-02' },
@@ -116,13 +118,13 @@ test.describe('fileVersions', () => {
     expect(versions[0]._updatedAt).toBe('2026-03-02')
   })
 
-  test('ignore les suppressions et les lignes sans fichier', () => {
+  test('ignores deletions and lines without a file', () => {
     expect(fileVersions([{ ...file('a'), _action: 'delete' }, folder('docs')])).toEqual([])
   })
 })
 
 test.describe('fileIcon', () => {
-  test('choisit licône selon le type, puis selon lextension', () => {
+  test('picks the icon by type, then by extension', () => {
     expect(fileIcon('application/pdf', 'a.pdf')).toBe(mdi.mdiFilePdfBox)
     expect(fileIcon('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')).toBe(mdi.mdiFileExcelOutline)
     expect(fileIcon('text/csv')).toBe(mdi.mdiFileDelimitedOutline)

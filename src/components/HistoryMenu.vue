@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { DocumentLine, Revision } from '@/assets/documents'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { mdiDownload } from '@mdi/js'
@@ -9,7 +10,7 @@ import { useAsyncAction } from '@data-fair/lib-vue/async-action.js'
 import { formatBytes } from '@data-fair/lib-utils/format/bytes.js'
 import { attachmentFilename } from '@data-fair/lib-utils/format/attachment.js'
 import { useConfig } from '@/composables/config'
-import { attachmentUrl, fileIcon, fileVersions, type DocumentLine, type Revision } from '@/assets/documents'
+import { attachmentUrl, fileIcon, fileVersions } from '@/assets/documents'
 import ActionMenu from './ActionMenu.vue'
 
 const props = defineProps<{ target?: HTMLElement | null, line: DocumentLine }>()

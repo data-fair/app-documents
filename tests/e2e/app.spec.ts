@@ -1,5 +1,6 @@
-import { test, expect, type MockLine } from './fixtures'
+import type { MockLine } from './fixtures'
 import type { Page } from '@playwright/test'
+import { test, expect } from './fixtures'
 
 const row = (page: Page, name: string) => page.locator('tbody tr').filter({ has: page.locator('td').first().getByText(name, { exact: true }) })
 const names = (page: Page) => page.locator('tbody tr.v-data-table__tr td:first-child').allInnerTexts()
@@ -18,7 +19,7 @@ async function dialogSubmit (page: Page, label: string) {
   await expect(page.locator('.v-overlay--active .v-card')).toHaveCount(0)
 }
 
-test('liste dossiers explicites, dossiers déduits et fichiers, et navigue par le fil dariane', async ({ ged }) => {
+test('lists explicit folders, implied folders and files, and navigates with the breadcrumb', async ({ ged }) => {
   const { page } = ged
   await page.goto('/')
   await expect.poll(() => names(page)).toEqual(['docs', 'images', 'rapport.pdf'])
@@ -36,7 +37,7 @@ test('liste dossiers explicites, dossiers déduits et fichiers, et navigue par l
   await expect.poll(() => names(page)).toEqual(['photo.png'])
 })
 
-test('un dossier survit à la suppression de son dernier fichier', async ({ ged }) => {
+test('a folder survives the deletion of its last file', async ({ ged }) => {
   const { page, lines } = ged
   await page.goto('/')
   await page.getByRole('button', { name: 'Nouveau dossier' }).click()
@@ -53,7 +54,7 @@ test('un dossier survit à la suppression de son dernier fichier', async ({ ged 
   expect(lines.filter(l => l.nom === 'projets' && l.type_mime === '_folder')).toHaveLength(1)
 })
 
-test('renomme puis supprime un dossier de plus de 12 éléments, sans rien oublier', async ({ ged }) => {
+test('renames then deletes a folder of more than 12 items, without missing any', async ({ ged }) => {
   const { page, lines } = ged
   for (let i = 0; i < 20; i++) lines.push({ _id: `bulk${i}`, nom: `doc-${i}.txt`, path: i % 2 ? '/docs/' : '/docs/sous/', attachmentPath: `bulk${i}/h/doc-${i}.txt`, taille: 10, nbrevisions: 0 })
   await page.goto('/')
@@ -76,7 +77,7 @@ test('renomme puis supprime un dossier de plus de 12 éléments, sans rien oubli
   expect(lines.filter(l => l.path.startsWith('/archives/') || l.nom === 'archives')).toHaveLength(0)
 })
 
-test('remplace un fichier : nom, compteur, téléchargement et historique des versions', async ({ ged }) => {
+test('replaces a file: name, counter, download and version history', async ({ ged }) => {
   const { page } = ged
   await page.goto('/')
   await page.getByRole('button', { name: 'Importer', exact: true }).click()
@@ -115,7 +116,7 @@ test('remplace un fichier : nom, compteur, téléchargement et historique des ve
   await expect(row(page, 'Compte rendu').getByRole('button', { name: 'Historique de Compte rendu' })).toBeFocused()
 })
 
-test('un dépôt de même nom crée une version et garde les métadonnées, limport refuse le doublon', async ({ ged }) => {
+test('an upload with the same name creates a version and keeps the metadata, the import refuses the duplicate', async ({ ged }) => {
   const { page, lines } = ged
   await page.goto('/')
   await expect(row(page, 'rapport.pdf')).toBeVisible()
@@ -142,7 +143,7 @@ test('un dépôt de même nom crée une version et garde les métadonnées, limp
   expect(lines.filter(l => l.nom === 'rapport.pdf')).toHaveLength(1)
 })
 
-test('refuse de renommer un document avec le nom dun autre document du dossier', async ({ ged }) => {
+test('refuses to rename a document with the name of another document of the folder', async ({ ged }) => {
   const { page, lines } = ged
   await page.goto('/')
   await row(page, 'rapport.pdf').getByRole('button', { name: 'Modifier rapport.pdf' }).click()
@@ -159,7 +160,7 @@ test('refuse de renommer un document avec le nom dun autre document du dossier',
   expect(lines.filter(l => l.nom === 'docs' && l.type_mime !== '_folder')).toHaveLength(1)
 })
 
-test('écrit et modifie les métadonnées dun document', async ({ ged }) => {
+test('writes and edits the metadata of a document', async ({ ged }) => {
   const { page, lines } = ged
   await page.goto('/')
   await page.getByRole('button', { name: 'Importer', exact: true }).click()
@@ -175,7 +176,7 @@ test('écrit et modifie les métadonnées dun document', async ({ ged }) => {
   expect(lines.find(l => l._id === 'file1')?.auteur).toBe('Martin')
 })
 
-test('recherche dans toute larborescence, ouvre un dossier trouvé et revient en effaçant', async ({ ged }) => {
+test('searches the whole tree, opens a found folder and comes back when clearing', async ({ ged }) => {
   const { page, requests } = ged
   await page.goto('/')
   await expect(row(page, 'rapport.pdf')).toBeVisible()
@@ -194,7 +195,7 @@ test('recherche dans toute larborescence, ouvre un dossier trouvé et revient en
   await expect.poll(() => names(page)).toEqual(['notes.txt'])
 })
 
-test('gère les noms de dossier spéciaux et les noms répétés dans le chemin', async ({ ged }) => {
+test('handles special folder names and names repeated in the path', async ({ ged }) => {
   const { page } = ged
   const special = 'Rapports "2026" (v1): a*b?'
   await page.goto('/')
@@ -212,9 +213,9 @@ test('gère les noms de dossier spéciaux et les noms répétés dans le chemin'
   await expect(page).toHaveURL(/path=%2Fa%2F$/)
 })
 
-test.describe('historique désactivé sur le jeu de données', () => {
+test.describe('history disabled on the dataset', () => {
   test.use({ gedOptions: { history: false } })
-  test('masque le bouton historique', async ({ ged }) => {
+  test('hides the history button', async ({ ged }) => {
     const { page } = ged
     await page.goto('/')
     await expect(row(page, 'rapport.pdf').getByRole('link', { name: 'Télécharger rapport.pdf' })).toBeVisible()
@@ -222,7 +223,7 @@ test.describe('historique désactivé sur le jeu de données', () => {
   })
 })
 
-test('déclenche la capture une fois les lignes affichées et allège la vignette', async ({ ged }) => {
+test('triggers the capture once the rows are displayed and lightens the thumbnail', async ({ ged }) => {
   const { page } = ged
   await page.addInitScript(() => {
     (window as any).triggerCapture = () => {
@@ -236,7 +237,7 @@ test('déclenche la capture une fois les lignes affichées et allège la vignett
   await expect(page.getByRole('columnheader', { name: 'Actions' })).toHaveCount(0)
 })
 
-test('affiche les métadonnées en colonnes et trie par data-fair, dossiers en tête', async ({ ged }) => {
+test('displays the metadata as columns and sorts through data-fair, folders first', async ({ ged }) => {
   const { page, lines, requests } = ged
   lines.push({ _id: 'gros', nom: 'gros.pdf', path: '/', attachmentPath: 'gros/h/gros.pdf', taille: 9000000, type_mime: 'application/pdf', nbrevisions: 0, auteur: 'Martin' })
   await page.goto('/')

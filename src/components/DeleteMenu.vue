@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import type { Row } from '@/assets/documents'
 import { useI18n } from 'vue-i18n'
 import { useAsyncAction } from '@data-fair/lib-vue/async-action.js'
 import { useDocuments } from '@/composables/documents'
-import type { Row } from '@/assets/documents'
 import ActionMenu from './ActionMenu.vue'
 
 const props = defineProps<{ target?: HTMLElement | null, row: Row }>()

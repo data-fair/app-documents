@@ -21,7 +21,7 @@ export interface GedSchemaField {
 
 export const ATTACHMENT_FIELD_KEY = 'attachmentPath'
 
-// colonnes techniques attendues par la GED, dans l'ordre de création
+// technical columns expected by the GED, in creation order
 export const TECHNICAL_FIELDS: GedSchemaField[] = [
   { key: 'path', type: 'string', title: 'Dossier', description: 'Chemin du dossier contenant le document' },
   { key: 'nom', type: 'string', title: 'Nom' },
@@ -48,8 +48,8 @@ export function buildDatasetSchema (metadata: MetadataField[] = []): GedSchemaFi
   return [...TECHNICAL_FIELDS, ...metadata.map(metadataToSchemaField)]
 }
 
-// fusion additive d'un schéma existant avec le schéma désiré : on ajoute les colonnes manquantes,
-// on n'en supprime jamais (pas de perte de données)
+// additive merge of an existing schema with the desired schema: missing columns are added,
+// none is ever removed (no data loss)
 export function mergeDatasetSchema (current: GedSchemaField[] = [], desired: GedSchemaField[] = []): { schema: GedSchemaField[], changed: boolean } {
   const schema = [...current]
   const keys = new Set(schema.map(f => f.key))
@@ -76,7 +76,7 @@ export function buildSearchQuery (q: string, metadata: MetadataField[] = []) {
   }
 }
 
-// les clés de métadonnées doivent rester hors des colonnes techniques
+// metadata keys must stay out of the technical columns
 export function metadataKeyError (metadata: MetadataField[] = []): string | null {
   const reserved = new Set(TECHNICAL_FIELDS.map(f => f.key))
   const seen = new Set<string>()

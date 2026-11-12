@@ -1,6 +1,7 @@
+import type { GedSchemaField } from '@/assets/ged'
 import { ref } from 'vue'
 import { ofetch } from 'ofetch'
-import { buildDatasetSchema, mergeDatasetSchema, metadataKeyError, type GedSchemaField } from '@/assets/ged'
+import { buildDatasetSchema, mergeDatasetSchema, metadataKeyError } from '@/assets/ged'
 import { useConfig } from './config'
 
 interface DatasetRef {

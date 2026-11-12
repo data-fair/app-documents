@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import type { FolderRow } from '@/assets/documents'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAsyncAction } from '@data-fair/lib-vue/async-action.js'
 import { useDocuments } from '@/composables/documents'
-import { folderNameError, type FolderRow } from '@/assets/documents'
+import { folderNameError } from '@/assets/documents'
 import ActionMenu from './ActionMenu.vue'
 
 const props = defineProps<{ target?: HTMLElement | null, folder?: FolderRow, siblings: string[] }>()
